@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私人助理 - 网页原型 (重构版)</title>
+    
+    <!-- 依赖的第三方库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new@1.1.9/leader-line.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plain-draggable@2.5.14/plain-draggable.min.js"></script>
+
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #plan-canvas {
+            cursor: grab;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0);
+            background-size: 25px 25px;
+        }
+        #plan-canvas:active { cursor: grabbing; }
+        #plan-container { transform-origin: 0 0; transition: transform 0.1s linear; }
+        .plan-node {
+            position: absolute; z-index: 10; cursor: move;
+            transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .plan-node:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px); z-index: 20;
+        }
+        .plan-node.is-dragging {
+            transition: none !important;
+            z-index: 30 !important;
+        }
+        .leader-line { z-index: 5; }
+        .project-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 z-30 w-full bg-white/80 backdrop-blur-sm border-b flex items-center justify-between px-4 h-16">
+        <div class="flex items-center gap-3">
+            <i data-lucide="clipboard-check" class="w-8 h-8 text-blue-600"></i>
+            <h1 class="text-xl font-bold hidden sm:block">私人助理</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <button data-page="home" class="nav-btn flex items-center gap-2 p-2 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50"><i data-lucide="calendar-days" class="w-5 h-5"></i><span>日程</span></button>
+            <button data-page="planning" class="nav-btn flex items-center gap-2 p-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"><i data-lucide="network" class="w-5 h-5"></i><span>规划</span></button>
+            <button data-page="me" class="nav-btn flex items-center gap-2 p-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"><i data-lucide="user-round" class="w-5 h-5"></i><span>我的</span></button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="w-full pt-16 h-screen">
+        <!-- Page 1: Schedule -->
+        <div id="page-home" class="h-full overflow-y-auto">
+             <div class="bg-white lg:shadow-xl lg:max-w-4xl lg:mx-auto lg:my-8 lg:rounded-lg">
+                <header id="schedule-header" class="p-4 border-b bg-white sticky top-0 z-20 lg:rounded-t-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-baseline gap-2"><h1 class="text-2xl font-bold">2025年</h1><p class="text-2xl font-semibold text-gray-700">9月</p></div>
+                        <div class="hidden sm:flex items-center p-1 bg-gray-200/80 rounded-lg text-sm"><button class="px-4 py-1 rounded-md text-gray-600 hover:bg-gray-300/50">日</button><button class="px-4 py-1 rounded-md bg-white shadow font-semibold text-blue-600">周</button><button class="px-4 py-1 rounded-md text-gray-600 hover:bg-gray-300/50">月</button><button class="px-4 py-1 rounded-md text-gray-600 hover:bg-gray-300/50">年</button></div>
+                    </div>
+                    <div id="weekday-selector" class="flex justify-around text-center text-sm">
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周日</span><span class="font-semibold mt-1">31</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周一</span><span class="font-semibold mt-1">1</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer bg-blue-600 text-white rounded-lg shadow"><span class="text-xs font-light">周二</span><span class="font-bold text-lg mt-0.5">2</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周三</span><span class="font-semibold mt-1">3</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周四</span><span class="font-semibold mt-1">4</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周五</span><span class="font-semibold mt-1">5</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周六</span><span class="font-semibold mt-1">6</span></div>
+                    </div>
+                </header>
+                <div id="all-day-tasks" class="sticky z-10 bg-white px-4 py-2 border-b"><div class="bg-indigo-50 border border-indigo-200 rounded-lg p-2 flex items-center gap-3"><i data-lucide="droplets" class="w-5 h-5 text-indigo-500"></i><p class="text-sm font-medium text-indigo-800">喝三杯水</p></div></div>
+                <div class="p-4 space-y-4">
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">上午 09:00</div><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-3"><p class="font-semibold">撰写项目周报</p><div class="flex items-center gap-2 mt-1 text-xs text-gray-500"><i data-lucide="message-square" class="w-3 h-3 text-green-500"></i><span>微信提醒</span></div></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">上午 10:30</div><div class="flex-1 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-3"><p class="font-semibold">准备下午演示文稿</p><div class="flex items-center gap-2 mt-1 text-xs text-gray-500"><i data-lucide="message-square" class="w-3 h-3 text-green-500"></i><span>微信提醒</span></div></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">中午 12:00</div><div class="flex-1 bg-gray-50 border-l-4 border-gray-400 rounded-r-lg p-3"><p class="font-semibold text-gray-500 line-through">午餐会议</p><div class="flex items-center gap-2 mt-1 text-xs text-gray-400"><i data-lucide="check" class="w-3 h-3"></i><span>已完成</span></div></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">下午 02:30</div><div class="flex-1 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-3"><p class="font-semibold">与客户进行视频会议</p><p class="text-sm text-gray-600 mt-1">讨论第三季度合作方案。</p><div class="flex items-center gap-2 mt-2 text-xs text-red-500 font-bold"><i data-lucide="phone" class="w-3 h-3"></i><span>电话预警</span></div></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">下午 04:00</div><div class="flex-1 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg p-3"><p class="font-semibold">团队下午茶</p></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">下午 05:00</div><div class="flex-1 bg-gray-50 border-l-4 border-gray-400 rounded-r-lg p-3"><p class="font-semibold text-gray-500 line-through">取快递</p><div class="flex items-center gap-2 mt-1 text-xs text-gray-400"><i data-lucide="check" class="w-3 h-3"></i><span>已完成</span></div></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">晚上 07:00</div><div class="flex-1 bg-purple-50 border-l-4 border-purple-500 rounded-r-lg p-3"><p class="font-semibold">健身房锻炼 - 胸部</p><div class="flex items-center gap-2 mt-1 text-xs text-gray-500"><i data-lucide="message-square" class="w-3 h-3 text-green-500"></i><span>微信提醒</span></div></div></div>
+                    <div class="flex items-start gap-4"><div class="text-sm text-gray-500 w-16 text-right pt-1">晚上 09:00</div><div class="flex-1 bg-green-50 border-l-4 border-green-500 rounded-r-lg p-3"><p class="font-semibold">阅读《原子习惯》半小时</p></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 2: Planning -->
+        <div id="page-planning" class="hidden h-full flex">
+            <aside class="w-64 bg-white border-r flex flex-col flex-shrink-0">
+                <div class="p-4 border-b"><h2 class="text-lg font-semibold">我的所有项目</h2></div>
+                <div id="project-list" class="flex-grow overflow-y-auto p-2 space-y-1"></div>
+                <div class="p-2 border-t"><button id="add-project-btn" class="w-full flex items-center justify-center gap-2 p-2 rounded-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700"><i data-lucide="plus-circle" class="w-4 h-4"></i><span>创建新项目</span></button></div>
+            </aside>
+            <div class="flex-grow flex flex-col relative">
+                <div id="planning-header" class="p-4 border-b bg-white flex justify-between items-center z-20 flex-shrink-0">
+                    <div class="flex items-center gap-2"><input id="project-title-input" type="text" value="加载中..." class="text-xl lg:text-2xl font-bold bg-transparent focus:outline-none focus:bg-gray-100 rounded-lg p-1 -m-1"></div>
+                    <div class="flex items-center gap-4"><button id="add-node-btn" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i><span class="hidden sm:inline">新节点</span></button><button id="delete-project-btn" class="p-2 text-red-500 hover:bg-red-100 rounded-md"><i data-lucide="trash-2" class="w-5 h-5"></i></button></div>
+                </div>
+                <div id="planning-empty-state" class="hidden flex-grow items-center justify-center text-center">
+                    <div><i data-lucide="folder-search" class="w-16 h-16 text-gray-300 mx-auto"></i><h3 class="mt-2 text-lg font-medium text-gray-700">没有选中的项目</h3><p class="mt-1 text-sm text-gray-500">请从左侧选择一个项目，或创建一个新项目。</p></div>
+                </div>
+                <div id="plan-canvas-wrapper" class="relative w-full flex-grow">
+                    <div id="plan-canvas" class="absolute inset-0"><div id="plan-container" class="absolute top-0 left-0 w-full h-full"></div></div>
+                    <div class="absolute bottom-5 right-5 z-20 flex flex-col gap-2"><button id="zoom-in-btn" class="w-10 h-10 bg-white/80 backdrop-blur-sm text-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100"><i data-lucide="zoom-in" class="w-5 h-5"></i></button><button id="zoom-out-btn" class="w-10 h-10 bg-white/80 backdrop-blur-sm text-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100"><i data-lucide="zoom-out" class="w-5 h-5"></i></button><button id="zoom-reset-btn" class="w-10 h-10 bg-white/80 backdrop-blur-sm text-gray-700 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100"><i data-lucide="scan" class="w-5 h-5"></i></button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3: Me -->
+        <div id="page-me" class="hidden p-8 h-full overflow-y-auto">
+             <h1 class="text-3xl font-bold">我的</h1><p class="mt-4 text-gray-600">这里是个人中心页面。</p>
+        </div>
+        
+        <!-- FAB button for home page -->
+        <div id="fab-add-task" class="absolute bottom-5 right-5 z-20">
+             <button class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"><i data-lucide="plus" class="w-8 h-8"></i></button>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="add-project-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 m-4"><h3 class="text-lg font-medium text-gray-900 mb-4">创建新项目</h3><input id="new-project-name" type="text" placeholder="输入项目名称..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"><div class="mt-5 flex justify-end gap-3"><button id="cancel-add-project" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">取消</button><button id="confirm-add-project" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">创建</button></div></div>
+    </div>
+    <div id="delete-project-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 m-4 text-center">
+             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"><i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i></div>
+             <h3 class="text-lg font-medium text-gray-900 mt-4">确认删除项目？</h3><p class="mt-2 text-sm text-gray-500">此操作无法撤销。所有与该项目相关的节点和数据都将被永久删除。</p>
+             <div class="mt-5 flex justify-center gap-4"><button id="cancel-delete-project" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">取消</button><button id="confirm-delete-project" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">确认删除</button></div>
+         </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // =================================================================
+        // === 1. 数据管理模块 (Data Management) ============================
+        // =================================================================
+        const STORAGE_KEY = 'personalAssistantData';
+        let appData = { projects: [], activeProjectId: null };
+
+        function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); }
+        function loadData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) { appData = JSON.parse(savedData); }
+            else {
+                const defaultProjectId = `proj-${Date.now()}`;
+                appData.projects.push({
+                    id: defaultProjectId, title: "我的第一个项目",
+                    nodes: [ { id: `node-${Date.now()}-1`, title: "示例节点A", x: '10%', y: '20%' }, { id: `node-${Date.now()}-2`, title: "示例节点B", x: '45%', y: '40%' } ],
+                    connections: [{ from: `node-${Date.now()}-1`, to: `node-${Date.now()}-2` }]
+                });
+                appData.activeProjectId = defaultProjectId;
+                saveData();
+            }
+            if (!appData.activeProjectId && appData.projects.length > 0) {
+                appData.activeProjectId = appData.projects[0].id;
+            }
+        }
+        function switchProject(projectId) { if (appData.activeProjectId === projectId) return false; appData.activeProjectId = projectId; saveData(); return true; }
+        function addNewProject(title) { const newProjectId = `proj-${Date.now()}`; appData.projects.push({ id: newProjectId, title: title, nodes: [], connections: [] }); return newProjectId; }
+        function deleteActiveProject() { appData.projects = appData.projects.filter(p => p.id !== appData.activeProjectId); appData.activeProjectId = appData.projects.length > 0 ? appData.projects[0].id : null; saveData(); }
+        function updateActiveProjectTitle(newTitle) { const p = appData.projects.find(p => p.id === appData.activeProjectId); if (p) { p.title = newTitle; saveData(); } }
+        function updateNodePosition(nodeId, x, y) { const p = appData.projects.find(p => p.id === appData.activeProjectId); if (p) { const n = p.nodes.find(n => n.id === nodeId); if (n) { n.x = x; n.y = y; saveData(); } } }
+        function updateNodeTitle(nodeId, newTitle) { const p = appData.projects.find(p => p.id === appData.activeProjectId); if (p) { const n = p.nodes.find(n => n.id === nodeId); if (n) { n.title = newTitle; saveData(); } } }
+
+        // =================================================================
+        // === 2. 规划模块 (Planning Canvas Logic) =========================
+        // =================================================================
+        const planning = (() => {
+            const canvas = document.getElementById('plan-canvas');
+            const container = document.getElementById('plan-container');
+            let state = { lines: [], draggables: [], scale: 1, pan: { x: 0, y: 0 }, isPanning: false, startPoint: { x: 0, y: 0 } };
+            
+            const updateView = () => { container.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.scale})`; state.lines.forEach(line => line.position()); };
+            
+            const init = () => {
+                const activeProject = appData.projects.find(p => p.id === appData.activeProjectId);
+                if (!activeProject) return;
+
+                const nodes = Array.from(container.querySelectorAll('.plan-node'));
+                nodes.forEach(node => {
+                    const draggable = new PlainDraggable(node, {
+                        containment: container,
+                        onDragStart: () => node.classList.add('is-dragging'),
+                        onMove: () => state.lines.forEach(line => line.position()),
+                        onDragEnd: (pos) => {
+                            node.classList.remove('is-dragging');
+                            
+                            // ================== BUG FIX STARTS HERE ==================
+                            // 问题的核心：拖拽库返回的 `pos.left` 和 `pos.top` 是在当前视图（已缩放）下的像素位置。
+                            // 我们需要将这个位置换算回未缩放时的“逻辑”位置，然后再存为百分比。
+                            
+                            // 1. 计算出在未缩放的画布上，节点的真实像素位置。
+                            const unscaledLeft = pos.left / state.scale;
+                            const unscaledTop = pos.top / state.scale;
+
+                            // 2. 将这个真实像素位置转换为相对于容器宽高的百分比。
+                            const newX = `${(unscaledLeft / container.offsetWidth) * 100}%`;
+                            const newY = `${(unscaledTop / container.offsetHeight) * 100}%`;
+                            // =================== BUG FIX ENDS HERE ===================
+
+                            node.style.left = newX;
+                            node.style.top = newY;
+                            updateNodePosition(node.id, newX, newY);
+                        }
+                    });
+                    state.draggables.push(draggable);
+                });
+
+                if (activeProject.connections) {
+                    activeProject.connections.forEach(conn => {
+                         const fromEl = document.getElementById(conn.from); const toEl = document.getElementById(conn.to);
+                         if (fromEl && toEl) { state.lines.push(new LeaderLine(fromEl, toEl, { color: 'rgba(59, 130, 246, 0.6)', size: 4, path: 'fluid', endPlug: 'arrow1' })); }
+                    });
+                }
+                updateView();
+            };
+
+            const cleanup = () => {
+                state.lines.forEach(l => l.remove()); state.draggables.forEach(d => d.remove());
+                if (container) container.style.transform = '';
+                state = { lines: [], draggables: [], scale: 1, pan: { x: 0, y: 0 }, isPanning: false, startPoint: { x: 0, y: 0 } };
+            };
+            
+            const handleMouseDown = (e) => { if (e.target !== canvas && e.target !== container) return; state.isPanning = true; state.startPoint = { x: e.clientX - state.pan.x, y: e.clientY - state.pan.y }; canvas.style.cursor = 'grabbing'; };
+            const handleMouseMove = (e) => { if (!state.isPanning) return; e.preventDefault(); state.pan.x = e.clientX - state.startPoint.x; state.pan.y = e.clientY - state.startPoint.y; updateView(); };
+            const stopPanning = () => { state.isPanning = false; canvas.style.cursor = 'grab'; };
+            const handleWheel = (e) => { e.preventDefault(); const scaleAmount = e.deltaY > 0 ? -0.1 : 0.1; state.scale = Math.max(0.2, Math.min(2, state.scale + scaleAmount)); updateView(); };
+            const zoomIn = () => { state.scale = Math.min(2, state.scale + 0.2); updateView(); };
+            const zoomOut = () => { state.scale = Math.max(0.2, state.scale - 0.2); updateView(); };
+            const zoomReset = () => { state.scale = 1; state.pan = { x: 0, y: 0 }; updateView(); };
+
+            return { init, cleanup, handleMouseDown, handleMouseMove, stopPanning, handleWheel, zoomIn, zoomOut, zoomReset };
+        })();
+
+
+        // =================================================================
+        // === 3. UI 渲染模块 (UI Rendering) ===============================
+        // =================================================================
+        const pages = { home: document.getElementById('page-home'), planning: document.getElementById('page-planning'), me: document.getElementById('page-me') };
+        const fabButton = document.getElementById('fab-add-task');
+
+        function renderAll() { renderProjectList(); renderActiveProjectCanvas(); }
+        function renderProjectList() {
+            const projectListEl = document.getElementById('project-list');
+            projectListEl.innerHTML = '';
+            appData.projects.forEach(project => {
+                const item = document.createElement('button');
+                item.className = `project-item w-full text-left p-2 rounded-md text-sm hover:bg-gray-100 ${project.id === appData.activeProjectId ? 'active' : ''}`;
+                item.textContent = project.title;
+                item.dataset.projectId = project.id;
+                projectListEl.appendChild(item);
+            });
+        }
+        function renderActiveProjectCanvas() {
+            const activeProject = appData.projects.find(p => p.id === appData.activeProjectId);
+            const container = document.getElementById('plan-container');
+            const titleInput = document.getElementById('project-title-input');
+            const emptyState = document.getElementById('planning-empty-state');
+            const canvasWrapper = document.getElementById('plan-canvas-wrapper');
+            const planningHeader = document.getElementById('planning-header');
+            planning.cleanup(); 
+            if (!activeProject) {
+                container.innerHTML = ''; titleInput.value = '';
+                emptyState.classList.remove('hidden'); canvasWrapper.classList.add('hidden'); planningHeader.classList.add('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden'); canvasWrapper.classList.remove('hidden'); planningHeader.classList.remove('hidden');
+            titleInput.value = activeProject.title;
+            container.innerHTML = '';
+            activeProject.nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.id = node.id;
+                nodeEl.className = 'plan-node w-64 bg-white rounded-lg shadow-md p-4';
+                nodeEl.style.left = node.x; nodeEl.style.top = node.y;
+                nodeEl.innerHTML = `<input type="text" value="${node.title}" data-node-id="${node.id}" class="node-title-input text-lg font-bold w-full bg-transparent focus:outline-none focus:bg-gray-100 rounded-md p-1 -m-1"><p class="text-xs text-gray-500 mt-1">Details about the node...</p><button class="open-subtasks-btn mt-3 text-sm text-blue-600 hover:underline">查看子任务</button>`;
+                container.appendChild(nodeEl);
+            });
+            planning.init();
+        }
+        function switchPage(pageId) {
+            const currentPageId = document.querySelector('.nav-btn.text-blue-600').dataset.page;
+            if (currentPageId === 'planning' && pageId !== 'planning') { planning.cleanup(); }
+            Object.values(pages).forEach(page => page.classList.add('hidden'));
+            pages[pageId].classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.remove('text-blue-600', 'bg-blue-50'); btn.classList.add('text-gray-600'); });
+            document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('text-blue-600', 'bg-blue-50');
+            fabButton.style.display = (pageId === 'home') ? 'block' : 'none';
+            if (pageId === 'planning') { renderAll(); }
+        }
+
+        // =================================================================
+        // === 4. 应用主入口和事件监听 (App Initializer & Listeners) =======
+        // =================================================================
+        function initialize() {
+            loadData();
+            switchPage('home'); 
+            setupEventListeners();
+            lucide.createIcons();
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.nav-btn').forEach(button => { button.addEventListener('click', () => { switchPage(button.dataset.page); }); });
+            document.getElementById('project-list').addEventListener('click', (e) => { const item = e.target.closest('.project-item'); if (item) { if (switchProject(item.dataset.projectId)) { renderAll(); } } });
+            
+            const addProjectModal = document.getElementById('add-project-modal');
+            document.getElementById('add-project-btn').onclick = () => addProjectModal.classList.remove('hidden');
+            document.getElementById('cancel-add-project').onclick = () => addProjectModal.classList.add('hidden');
+            document.getElementById('confirm-add-project').onclick = () => { const input = document.getElementById('new-project-name'); const newName = input.value.trim(); if (newName) { const newId = addNewProject(newName); switchProject(newId); renderAll(); input.value = ''; addProjectModal.classList.add('hidden'); } };
+            
+            const deleteProjectModal = document.getElementById('delete-project-modal');
+            document.getElementById('delete-project-btn').onclick = () => { if (appData.activeProjectId) deleteProjectModal.classList.remove('hidden'); };
+            document.getElementById('cancel-delete-project').onclick = () => deleteProjectModal.classList.add('hidden');
+            document.getElementById('confirm-delete-project').onclick = () => { deleteActiveProject(); renderAll(); deleteProjectModal.classList.add('hidden'); };
+            
+            document.getElementById('project-title-input').addEventListener('change', (e) => { updateActiveProjectTitle(e.target.value); renderProjectList(); });
+            document.getElementById('plan-container').addEventListener('change', (e) => { if (e.target.matches('.node-title-input')) { updateNodeTitle(e.target.dataset.nodeId, e.target.value); } });
+            
+            const canvas = document.getElementById('plan-canvas');
+            canvas.addEventListener('mousedown', planning.handleMouseDown);
+            canvas.addEventListener('mousemove', planning.handleMouseMove);
+            canvas.addEventListener('mouseup', planning.stopPanning);
+            canvas.addEventListener('mouseleave', planning.stopPanning);
+            canvas.addEventListener('wheel', planning.handleWheel);
+            document.getElementById('zoom-in-btn').onclick = planning.zoomIn;
+            document.getElementById('zoom-out-btn').onclick = planning.zoomOut;
+            document.getElementById('zoom-reset-btn').onclick = planning.zoomReset;
+        }
+
+        initialize();
+    });
+    </script>
+</body>
+</html>
+

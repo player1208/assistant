@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私人助理 - 网页原型 (高级样式版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new@1.1.9/leader-line.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plain-draggable@2.5.14/plain-draggable.min.js"></script>
+
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #plan-canvas {
+            cursor: grab;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0);
+            background-size: 25px 25px;
+        }
+        #plan-canvas:active { cursor: grabbing; }
+        #plan-container { transform-origin: 0 0; transition: transform 0.1s linear; }
+        .plan-node {
+            position: absolute; z-index: 10; cursor: move;
+            transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .plan-node:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px); z-index: 20;
+        }
+        .leader-line { z-index: 5; }
+        .project-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 z-30 w-full bg-white/80 backdrop-blur-sm border-b flex items-center justify-between px-4 h-16">
+        <div class="flex items-center gap-3">
+            <i data-lucide="clipboard-check" class="w-8 h-8 text-blue-600"></i>
+            <h1 class="text-xl font-bold hidden sm:block">私人助理</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <button data-page="home" class="nav-btn flex items-center gap-2 p-2 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50"><i data-lucide="calendar-days" class="w-5 h-5"></i><span>日程</span></button>
+            <button data-page="planning" class="nav-btn flex items-center gap-2 p-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"><i data-lucide="network" class="w-5 h-5"></i><span>规划</span></button>
+            <button data-page="me" class="nav-btn flex items-center gap-2 p-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"><i data-lucide="user-round" class="w-5 h-5"></i><span>我的</span></button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="w-full pt-16 h-screen">
+        <!-- ======================= Page 1: Schedule (Upgraded Version) ======================= -->
+        <div id="page-home" class="h-full overflow-y-auto">
+             <div class="bg-white lg:shadow-xl lg:max-w-4xl lg:mx-auto lg:my-8 lg:rounded-lg">
+                <header id="schedule-header" class="p-4 border-b bg-white sticky top-0 z-20 lg:rounded-t-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-baseline gap-2">
+                            <h1 class="text-2xl font-bold">2025年</h1>
+                            <p class="text-2xl font-semibold text-gray-700">9月</p>
+                        </div>
+                        <div class="hidden sm:flex items-center p-1 bg-gray-200/80 rounded-lg text-sm">
+                            <button class="px-4 py-1 rounded-md text-gray-600 hover:bg-gray-300/50">日</button>
+                            <button class="px-4 py-1 rounded-md bg-white shadow font-semibold text-blue-600">周</button>
+                            <button class="px-4 py-1 rounded-md text-gray-600 hover:bg-gray-300/50">月</button>
+                            <button class="px-4 py-1 rounded-md text-gray-600 hover:bg-gray-300/50">年</button>
+                        </div>
+                    </div>
+                    <div id="weekday-selector" class="flex justify-around text-center text-sm">
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周日</span><span class="font-semibold mt-1">31</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周一</span><span class="font-semibold mt-1">1</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer bg-blue-600 text-white rounded-lg shadow"><span class="text-xs font-light">周二</span><span class="font-bold text-lg mt-0.5">2</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周三</span><span class="font-semibold mt-1">3</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周四</span><span class="font-semibold mt-1">4</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周五</span><span class="font-semibold mt-1">5</span></div>
+                        <div class="weekday-item flex flex-col items-center p-2 w-12 cursor-pointer hover:bg-gray-100 rounded-lg"><span class="text-xs text-gray-500">周六</span><span class="font-semibold mt-1">6</span></div>
+                    </div>
+                </header>
+                <div id="all-day-tasks" class="sticky z-10 bg-white px-4 py-3 border-b">
+                    <!-- All-day tasks will be rendered here by JS -->
+                </div>
+                <div id="schedule-content" class="p-4 space-y-4">
+                    <!-- Schedule tasks will be rendered here by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= Page 2: Planning (Full Feature) ======================= -->
+        <div id="page-planning" class="hidden h-full flex">
+            <!-- Planning page content from previous version -->
+        </div>
+
+        <!-- ======================= Page 3: My Account (Placeholder) ======================= -->
+        <div id="page-me" class="hidden p-8 h-full overflow-y-auto">
+             <h1 class="text-3xl font-bold">我的</h1><p class="mt-4 text-gray-600">这里是个人中心页面。</p>
+        </div>
+
+    </main>
+    
+    <!-- Floating Action Button for Schedule Page -->
+    <div id="fab-add-task" class="fixed bottom-5 right-5 z-40">
+        <button class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"><i data-lucide="plus" class="w-8 h-8"></i></button>
+    </div>
+
+    <!-- Modals for Planning Page -->
+    <div id="add-project-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <!-- Add Project Modal Content -->
+    </div>
+    <div id="delete-project-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+         <!-- Delete Project Modal Content -->
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+
+        // ========================================================================
+        // SCHEDULE PAGE LOGIC
+        // ========================================================================
+        const schedulePage = (() => {
+            const MOCK_ALL_DAY_TASKS = [
+                { title: '喝三杯水', status: 'pending', goalColor: 'indigo' },
+                { title: '冥想5分钟', status: 'pending', goalColor: 'purple' },
+                { title: '阅读', status: 'pending', goalColor: 'teal' },
+            ];
+
+            const MOCK_TIMED_TASKS = [
+                { time: '上午 07:30', title: '晨跑3公里', status: 'pending', goalColor: 'green' },
+                { time: '上午 09:00', title: '撰写项目周报', status: 'pending', goalColor: 'green' },
+                { time: '上午 11:00', title: '回复重要邮件', status: 'pending', goalColor: 'green' },
+                { time: '中午 12:00', title: '午餐会议', status: 'completed', goalColor: null },
+                { time: '下午 02:30', title: '与客户进行视频会议', description: '讨论第三季度合作方案。', status: 'pending', goalColor: 'purple', isUrgent: true },
+                { time: '下午 04:00', title: '团队下午茶', status: 'pending', goalColor: 'green' },
+                { time: '下午 05:30', title: '取快递', status: 'completed', goalColor: null },
+                { time: '晚上 07:00', title: '健身房锻炼 - 胸部', status: 'pending', goalColor: 'purple' },
+            ];
+
+            const colorMap = {
+                green: { checkbox: 'border-green-500', bg: 'bg-green-50', text: 'text-green-800' },
+                purple: { checkbox: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-800' },
+                indigo: { checkbox: 'border-indigo-500', bg: 'bg-indigo-50', text: 'text-indigo-800' },
+                teal: { checkbox: 'border-teal-500', bg: 'bg-teal-50', text: 'text-teal-800' },
+                gray: { checkbox: 'border-gray-400', bg: 'bg-gray-50', text: 'text-gray-500 line-through'}
+            };
+
+            function renderAllDayTasks() {
+                const container = document.getElementById('all-day-tasks');
+                container.innerHTML = `
+                    <div class="flex gap-4">
+                        <div class="text-xs font-semibold text-blue-600 w-16 text-right pt-2 flex-shrink-0">全天</div>
+                        <div class="flex-1 flex flex-wrap gap-2 items-center">
+                            ${MOCK_ALL_DAY_TASKS.map(task => {
+                                const color = task.status === 'completed' ? 'gray' : (task.goalColor || 'green');
+                                return `
+                                <div class="task-item inline-flex items-center gap-3 p-1.5 pr-4 rounded-full ${colorMap[color].bg}" data-status="${task.status}" data-goal-color="${task.goalColor || 'green'}">
+                                    <button class="task-checkbox w-5 h-5 rounded-full bg-white flex-shrink-0 transition-all flex items-center justify-center ${
+                                        task.status === 'completed' ? 'bg-gray-400 text-white' : `border-2 ${colorMap[color].checkbox}`
+                                    }">
+                                        ${task.status === 'completed' ? '<i data-lucide="check" class="w-3 h-3 -rotate-12"></i>' : ''}
+                                    </button>
+                                    <p class="task-title text-sm font-medium ${colorMap[color].text}">${task.title}</p>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>`;
+            }
+
+            function renderTimedTasks() {
+                const container = document.getElementById('schedule-content');
+                container.innerHTML = MOCK_TIMED_TASKS.map(task => {
+                    const isCompleted = task.status === 'completed';
+                    const effectiveColor = isCompleted ? 'gray' : (task.goalColor || 'green');
+
+                    let contentClasses = 'p-3 rounded-lg w-full';
+                    if (!isCompleted && task.isUrgent) {
+                        contentClasses += ` ${colorMap[effectiveColor].bg} border-2 border-red-600 shadow-sm`;
+                    } else {
+                        contentClasses += ` ${colorMap[effectiveColor].bg}`;
+                    }
+                    
+                    return `
+                    <div class="task-item flex items-start gap-4" data-status="${task.status}" data-goal-color="${task.goalColor || 'green'}" data-is-urgent="${!!task.isUrgent}">
+                        <div class="text-sm text-gray-500 w-16 text-right pt-3">${task.time}</div>
+                        <div class="flex-1 flex items-start gap-3">
+                            <button class="task-checkbox mt-2 w-5 h-5 rounded-full flex-shrink-0 transition-all flex items-center justify-center ${
+                                isCompleted ? 'bg-gray-400 text-white' : `border-2 ${task.isUrgent ? 'border-red-600' : colorMap[effectiveColor].checkbox}`
+                            }">
+                                ${isCompleted ? '<i data-lucide="check" class="w-3 h-3 -rotate-12"></i>' : ''}
+                            </button>
+                            <div class="task-content ${contentClasses}">
+                                <p class="task-title font-semibold ${isCompleted ? colorMap.gray.text : ''}">${task.title}</p>
+                                ${task.description ? `<p class="text-sm text-gray-600 mt-1">${task.description}</p>` : ''}
+                                ${task.isUrgent ? `
+                                <div class="flex items-center gap-2 mt-2 text-xs ${colorMap[effectiveColor].text} font-bold">
+                                    <i data-lucide="phone" class="w-3 h-3"></i>
+                                    <span>电话预警</span>
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            }
+
+            function initCheckboxes() {
+                document.querySelectorAll('#page-home .task-item').forEach(item => {
+                    const checkbox = item.querySelector('.task-checkbox');
+                    if (!checkbox || checkbox.handler) return;
+
+                    const clickHandler = () => {
+                        const isUrgent = item.dataset.isUrgent === 'true';
+                        const goalColor = item.dataset.goalColor;
+                        const content = item.querySelector('.task-content') || item;
+                        const title = item.querySelector('.task-title');
+
+                        if (item.dataset.status === 'pending') {
+                            item.dataset.status = 'completed';
+                            checkbox.innerHTML = '<i data-lucide="check" class="w-3 h-3 -rotate-12"></i>';
+                            lucide.createIcons();
+                            checkbox.className = 'task-checkbox mt-2 w-5 h-5 rounded-full flex-shrink-0 transition-all flex items-center justify-center bg-gray-400 text-white';
+                            
+                            content.className = `task-content ${item.id === 'all-day-tasks' ? '' : 'p-3 rounded-lg w-full'} ${colorMap.gray.bg}`;
+                            title.className = `task-title font-semibold ${colorMap.gray.text}`;
+                        } else {
+                            item.dataset.status = 'pending';
+                            checkbox.innerHTML = '';
+                            let checkboxColorClass = isUrgent ? 'border-red-600' : colorMap[goalColor].checkbox;
+                            checkbox.className = `task-checkbox mt-2 w-5 h-5 rounded-full flex-shrink-0 transition-all flex items-center justify-center border-2 ${checkboxColorClass}`;
+                            
+                            let contentColorClass = isUrgent ? `${colorMap[goalColor].bg} border-2 border-red-600 shadow-sm` : colorMap[goalColor].bg;
+                            content.className = `task-content p-3 rounded-lg w-full ${contentColorClass}`;
+                            title.className = `task-title font-semibold`;
+                        }
+                    };
+                    checkbox.handler = clickHandler;
+                    checkbox.addEventListener('click', clickHandler);
+                });
+            }
+
+            function init() {
+                renderAllDayTasks();
+                renderTimedTasks();
+                initCheckboxes();
+                lucide.createIcons();
+
+                const header = document.getElementById('schedule-header');
+                const allDayTasks = document.getElementById('all-day-tasks');
+                function setStickyTop() { if (header && allDayTasks) allDayTasks.style.top = `${header.offsetHeight}px`; }
+                setStickyTop();
+                window.addEventListener('resize', setStickyTop, { passive: true });
+
+                const weekdayItems = document.querySelectorAll('.weekday-item');
+                weekdayItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        weekdayItems.forEach(i => {
+                            i.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                            i.querySelectorAll('span').forEach((s, idx) => s.className = idx === 0 ? 'text-xs text-gray-500' : 'font-semibold mt-1');
+                        });
+                        item.classList.add('bg-blue-600', 'text-white', 'shadow');
+                        item.querySelectorAll('span').forEach((s, idx) => s.className = idx === 0 ? 'text-xs font-light' : 'font-bold text-lg mt-0.5');
+                    });
+                });
+            }
+            return { init };
+        })();
+
+        // Placeholder for Planning Page Logic
+        const planningPage = { init: () => {} };
+
+        // ========================================================================
+        // MAIN APP INITIALIZATION
+        // ========================================================================
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const fabButton = document.getElementById('fab-add-task');
+        
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const pageId = button.dataset.page;
+                document.querySelectorAll('main > div[id^="page-"]').forEach(p => p.classList.add('hidden'));
+                document.getElementById(`page-${pageId}`).classList.remove('hidden');
+                
+                navButtons.forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'bg-blue-50');
+                    btn.classList.add('text-gray-600');
+                });
+                button.classList.add('text-blue-600', 'bg-blue-50');
+                
+                fabButton.style.display = (pageId === 'home') ? 'block' : 'none';
+            });
+        });
+
+        // Initial Load
+        document.getElementById('page-planning').classList.add('hidden');
+        document.getElementById('page-me').classList.add('hidden');
+        document.getElementById('page-home').classList.remove('hidden');
+        
+        schedulePage.init();
+        planningPage.init();
+        fabButton.style.display = 'block';
+    });
+    </script>
+</body>
+</html>
