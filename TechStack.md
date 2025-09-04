@@ -103,3 +103,11 @@ repo-root/ ← 仓库根目录
 │ └─ config/ ← 配置库，比如 ESLint 规则、TS 配置，多个项目都能共享
 │
 └─ package.json ← 顶层依赖和 workspace 配置
+
+在仓库根目录执行：
+pnpm -F @assistent/frontend install（安装依赖）
+pnpm -F @assistent/frontend dev
+浏览器访问：
+http://localhost:5173/（看到全部前端）
+http://localhost:5173/schedule（日程模块）
+http://localhost:5173/planning（规划模块）
