@@ -1,8 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* 可选：应用级基础样式 */
-html, body, #root {
-  height: 100%;
-}
+/* 应用级基础高度 */
+html, body, #root { height: 100%; }

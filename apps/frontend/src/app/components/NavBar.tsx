@@ -7,10 +7,10 @@ export default function NavBar() {
     }`
 
   return (
-    <header className="border-b bg-white">
+    <header className="fixed top-0 z-30 w-full bg-white/80 backdrop-blur-sm border-b">
       <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         <NavLink to="/" className="font-semibold text-lg text-gray-800">
-          Assistent
+          私人助理
         </NavLink>
         <nav className="flex gap-2">
           <NavLink to="/schedule" className={linkClass} end>
@@ -18,6 +18,9 @@ export default function NavBar() {
           </NavLink>
           <NavLink to="/planning" className={linkClass} end>
             Planning
+          </NavLink>
+          <NavLink to="/me" className={linkClass} end>
+            Me
           </NavLink>
         </nav>
       </div>

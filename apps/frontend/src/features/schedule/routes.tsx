@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Outlet, RouteObject, useRoutes } from 'react-router-dom'
+import SchedulePage from './pages/SchedulePage'
 
 function ScheduleLayout() {
   return (
@@ -12,15 +13,18 @@ function ScheduleLayout() {
   )
 }
 
+// 直接展示按原型实现的页面
 function ScheduleHome() {
-  return <div>Schedule Home</div>
+  return <SchedulePage />
 }
 
 const routes: RouteObject[] = [
   {
     path: '/',
     element: <ScheduleLayout />,
-    children: [{ index: true, element: <ScheduleHome /> }],
+    children: [
+      { index: true, element: <ScheduleHome /> },
+    ],
   },
 ]
 
