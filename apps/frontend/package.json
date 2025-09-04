@@ -1,0 +1,11 @@
+{
+  "name": "@assistent/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo dev frontend",
+    "build": "echo build frontend",
+    "start": "echo start frontend"
+  }
+}
+

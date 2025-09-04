@@ -1,0 +1,11 @@
+{
+  "name": "@assistent/schedule-service",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo dev schedule",
+    "build": "echo build schedule",
+    "start": "echo start schedule"
+  }
+}
+

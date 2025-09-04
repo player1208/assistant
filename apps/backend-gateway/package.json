@@ -1,0 +1,11 @@
+{
+  "name": "@assistent/backend-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo dev gateway",
+    "build": "echo build gateway",
+    "start": "echo start gateway"
+  }
+}
+
