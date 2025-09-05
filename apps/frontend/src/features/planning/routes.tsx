@@ -4,8 +4,7 @@ import PlanningPage from './pages/PlanningPage'
 
 function PlanningLayout() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Planning</h1>
+    <div className="h-full">
       <Suspense fallback={<div>Loading...</div>}>
         <Outlet />
       </Suspense>

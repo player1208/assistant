@@ -1,0 +1,59 @@
+/* 全局样式，匹配HTML版本的样式 */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#plan-canvas {
+  cursor: grab;
+  overflow: hidden;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.1) 1px, transparent 0);
+  background-size: 25px 25px;
+}
+
+#plan-canvas:active {
+  cursor: grabbing;
+}
+
+#plan-container {
+  transform-origin: 0 0;
+  transition: transform 0.1s linear;
+}
+
+.plan-node {
+  position: absolute;
+  z-index: 10;
+  cursor: move;
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.plan-node:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+  z-index: 20;
+}
+
+.plan-node.is-dragging {
+  transition: none !important;
+  z-index: 30 !important;
+}
+
+.leader-line {
+  z-index: 5;
+}
+
+.project-item.active {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}

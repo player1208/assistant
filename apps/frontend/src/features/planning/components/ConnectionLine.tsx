@@ -3,9 +3,10 @@ import { Connection, Task } from '../types'
 interface ConnectionLineProps {
   connection: Connection
   tasks: Task[]
+  isOnCriticalPath?: boolean
 }
 
-export default function ConnectionLine({ connection, tasks }: ConnectionLineProps) {
+export default function ConnectionLine({ connection, tasks, isOnCriticalPath }: ConnectionLineProps) {
   const fromTask = tasks.find(task => task.id === connection.from)
   const toTask = tasks.find(task => task.id === connection.to)
 
@@ -15,9 +16,12 @@ export default function ConnectionLine({ connection, tasks }: ConnectionLineProp
 
   // 计算连接点位置
   const fromX = fromTask.position.x + 200 // 右侧连接点
-  const fromY = fromTask.position.y + 60
+  const fromY = fromTask.position.y + 65
   const toX = toTask.position.x // 左侧连接点
-  const toY = toTask.position.y + 60
+  const toY = toTask.position.y + 65
+
+  // 判断是否是关键路径连接
+  const isCritical = isOnCriticalPath || (fromTask.isOnCriticalPath && toTask.isOnCriticalPath)
 
   // 计算控制点，创建平滑的贝塞尔曲线
   const controlPointOffset = Math.abs(toX - fromX) * 0.5
@@ -36,8 +40,12 @@ export default function ConnectionLine({ connection, tasks }: ConnectionLineProp
   const arrowX2 = toX - arrowLength * Math.cos(angle + arrowAngle)
   const arrowY2 = toY - arrowLength * Math.sin(angle + arrowAngle)
 
-  // 根据连接类型选择颜色
+  // 根据连接类型和关键路径选择颜色
   const getConnectionColor = () => {
+    if (isCritical) {
+      return '#DC2626' // 关键路径红色
+    }
+    
     switch (connection.type) {
       case 'finish-to-start':
         return '#3B82F6' // 蓝色
@@ -81,10 +89,15 @@ export default function ConnectionLine({ connection, tasks }: ConnectionLineProp
       <path
         d={`M ${fromX} ${fromY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${toX} ${toY}`}
         stroke={getConnectionColor()}
-        strokeWidth="3"
+        strokeWidth={isCritical ? "4" : "3"}
         fill="none"
-        className="hover:stroke-4 transition-all cursor-pointer"
-        style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
+        className={`transition-all cursor-pointer ${isCritical ? 'stroke-dasharray-none' : ''}`}
+        style={{ 
+          filter: isCritical 
+            ? 'drop-shadow(0 2px 4px rgba(220, 38, 38, 0.2))' 
+            : 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+          strokeDasharray: isCritical ? 'none' : undefined
+        }}
       />
 
       {/* 箭头阴影 */}

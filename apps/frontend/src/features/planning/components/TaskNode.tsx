@@ -25,6 +25,9 @@ const priorityColors = {
   high: 'border-l-red-500'
 }
 
+const criticalPathColor = 'stroke-red-500 fill-red-50'
+const normalPathColor = 'stroke-gray-300 fill-white'
+
 export default function TaskNode({
   task,
   isSelected,
@@ -40,17 +43,22 @@ export default function TaskNode({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [hasDragged, setHasDragged] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [hoveredConnector, setHoveredConnector] = useState<'input' | 'output' | null>(null)
   const nodeRef = useRef<SVGGElement>(null)
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isConnecting) {
-      onConnect()
-    } else if (!hasDragged) {
+    if (!hasDragged) {
       // 只有在没有拖拽的情况下才选中节点
       onSelect()
     }
     setHasDragged(false) // 重置拖拽状态
+  }
+
+  const handleConnectorClick = (e: React.MouseEvent, type: 'input' | 'output') => {
+    e.stopPropagation()
+    onConnect()
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -147,6 +155,11 @@ export default function TaskNode({
     return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
   }
 
+  const formatSlack = (slack?: number) => {
+    if (slack === undefined) return ''
+    return slack === 0 ? '关键' : `松弛${slack}天`
+  }
+
   return (
     <g
       ref={nodeRef}
@@ -154,24 +167,47 @@ export default function TaskNode({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onMouseDown={handleMouseDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false)
+        setHoveredConnector(null)
+      }}
       className={`cursor-pointer ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
     >
       {/* 节点背景 */}
       <rect
         width="200"
-        height="120"
+        height="130"
         rx="8"
-        className={`fill-white stroke-2 ${
+        className={`${task.isOnCriticalPath ? criticalPathColor : normalPathColor} stroke-2 ${
           isSelected 
             ? 'stroke-blue-500' 
             : isConnectionStart
             ? 'stroke-blue-400'
+            : task.isOnCriticalPath
+            ? 'stroke-red-500'
             : 'stroke-gray-300'
-        } ${priorityColors[task.priority]}`}
+        }`}
         style={{ 
-          filter: isSelected ? 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+          filter: isSelected 
+            ? 'drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3))' 
+            : task.isOnCriticalPath
+            ? 'drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3))'
+            : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
         }}
       />
+
+      {/* 关键路径指示器 */}
+      {task.isOnCriticalPath && (
+        <rect
+          x="0"
+          y="0"
+          width="8"
+          height="130"
+          rx="8 0 0 8"
+          className="fill-red-500"
+        />
+      )}
 
       {/* 状态指示器 */}
       <circle
@@ -259,63 +295,109 @@ export default function TaskNode({
         结束: {formatDate(task.endDate)}
       </text>
 
-      {/* 优先级指示 */}
+      {/* 松弛时间/关键路径指示 */}
       <text
         x="35"
         y="105"
+        className={`text-xs ${task.isOnCriticalPath ? 'fill-red-600 font-bold' : 'fill-gray-500'}`}
+        style={{ fontSize: '9px' }}
+      >
+        {formatSlack(task.slack)}
+      </text>
+
+      {/* 持续时间指示 */}
+      <text
+        x="35"
+        y="120"
         className="text-xs fill-gray-400"
         style={{ fontSize: '9px' }}
       >
-        优先级: {task.priority === 'high' ? '高' : task.priority === 'medium' ? '中' : '低'}
+        工期: {task.duration || 0}天
       </text>
 
       {/* 连接点 - 右侧输出点 */}
-      <circle
-        cx="200"
-        cy="60"
-        r="6"
-        className={`fill-white stroke-2 ${
-          isConnecting ? 'stroke-blue-500 opacity-100' : 'stroke-gray-400 opacity-60 hover:opacity-100'
-        } transition-opacity`}
-        onClick={(e) => {
-          e.stopPropagation()
-          if (isConnecting) {
-            onConnect()
-          }
-        }}
-      />
-      <circle
-        cx="200"
-        cy="60"
-        r="3"
-        className={`${
-          isConnecting ? 'fill-blue-500' : 'fill-gray-400'
-        } transition-colors`}
-      />
+      {(isHovered || isConnecting || isConnectionStart) && (
+        <g>
+          <circle
+            cx="200"
+            cy="65"
+            r="8"
+            className={`fill-white stroke-2 ${
+              isConnectionStart 
+                ? 'stroke-blue-500 fill-blue-50' 
+                : hoveredConnector === 'output' || isConnecting
+                ? 'stroke-green-500 fill-green-50'
+                : 'stroke-gray-400'
+            } transition-all cursor-pointer`}
+            onMouseEnter={() => setHoveredConnector('output')}
+            onMouseLeave={() => setHoveredConnector(null)}
+            onClick={(e) => handleConnectorClick(e, 'output')}
+          />
+          <circle
+            cx="200"
+            cy="65"
+            r="4"
+            className={`${
+              isConnectionStart 
+                ? 'fill-blue-500' 
+                : hoveredConnector === 'output' || isConnecting
+                ? 'fill-green-500'
+                : 'fill-gray-400'
+            } transition-colors pointer-events-none`}
+          />
+          {/* 输出连接点标签 */}
+          {(hoveredConnector === 'output' || isConnectionStart) && (
+            <text
+              x="210"
+              y="70"
+              className="text-xs fill-gray-600 pointer-events-none"
+              style={{ fontSize: '10px' }}
+            >
+              输出
+            </text>
+          )}
+        </g>
+      )}
 
       {/* 连接点 - 左侧输入点 */}
-      <circle
-        cx="0"
-        cy="60"
-        r="6"
-        className={`fill-white stroke-2 ${
-          isConnecting ? 'stroke-blue-500 opacity-100' : 'stroke-gray-400 opacity-60 hover:opacity-100'
-        } transition-opacity`}
-        onClick={(e) => {
-          e.stopPropagation()
-          if (isConnecting) {
-            onConnect()
-          }
-        }}
-      />
-      <circle
-        cx="0"
-        cy="60"
-        r="3"
-        className={`${
-          isConnecting ? 'fill-blue-500' : 'fill-gray-400'
-        } transition-colors`}
-      />
+      {(isHovered || isConnecting) && !isConnectionStart && (
+        <g>
+          <circle
+            cx="0"
+            cy="65"
+            r="8"
+            className={`fill-white stroke-2 ${
+              hoveredConnector === 'input' || isConnecting
+                ? 'stroke-blue-500 fill-blue-50'
+                : 'stroke-gray-400'
+            } transition-all cursor-pointer`}
+            onMouseEnter={() => setHoveredConnector('input')}
+            onMouseLeave={() => setHoveredConnector(null)}
+            onClick={(e) => handleConnectorClick(e, 'input')}
+          />
+          <circle
+            cx="0"
+            cy="65"
+            r="4"
+            className={`${
+              hoveredConnector === 'input' || isConnecting
+                ? 'fill-blue-500'
+                : 'fill-gray-400'
+            } transition-colors pointer-events-none`}
+          />
+          {/* 输入连接点标签 */}
+          {hoveredConnector === 'input' && (
+            <text
+              x="-35"
+              y="70"
+              className="text-xs fill-gray-600 pointer-events-none"
+              style={{ fontSize: '10px' }}
+            >
+              输入
+            </text>
+          )}
+        </g>
+      )}
 
       {/* 编辑按钮 - 只在选中时显示 */}
       {isSelected && (

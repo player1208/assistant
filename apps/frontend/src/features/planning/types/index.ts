@@ -11,6 +11,14 @@ export interface Task {
   progress: number // 0-100
   estimatedHours?: number
   actualHours?: number
+  // 新增字段用于进度网络图计算
+  earlyStart?: Date
+  earlyFinish?: Date
+  lateStart?: Date
+  lateFinish?: Date
+  slack?: number // 松弛时间
+  isOnCriticalPath?: boolean
+  duration?: number // 持续时间（天）
 }
 
 export interface Project {

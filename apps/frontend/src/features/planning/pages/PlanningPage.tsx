@@ -1,7 +1,10 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { Plus, Trash2, PlusCircle, FolderSearch, Network, BarChart3, Calendar } from 'lucide-react'
 import { Project, Task, Connection } from '../types'
 import NetworkDiagram from '../components/NetworkDiagram'
 import TaskEditor from '../components/TaskEditor'
+import Overview from '../components/Overview'
+import GanttChart from '../components/GanttChart'
 
 // 模拟数据
 const mockProjects: Project[] = [
@@ -90,12 +93,16 @@ const mockConnections: Connection[] = [
   { id: 'conn-5', from: 'task-4', to: 'task-5', type: 'finish-to-start' }
 ]
 
+type ViewMode = 'network' | 'gantt' | 'overview'
+
 export default function PlanningPage() {
   const [projects, setProjects] = useState<Project[]>(mockProjects)
   const [currentProjectId, setCurrentProjectId] = useState('1')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [connections, setConnections] = useState<Connection[]>(mockConnections)
   const [isTaskEditorOpen, setIsTaskEditorOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('network')
+  const [viewKey, setViewKey] = useState(0) // 用于强制重新渲染组件
 
   const currentProject = projects.find(p => p.id === currentProjectId)
   const selectedTask = currentProject?.tasks.find(t => t.id === selectedTaskId)
@@ -166,74 +173,167 @@ export default function PlanningPage() {
     }
   }, [currentProject, currentProjectId])
 
+  const handleProjectUpdate = useCallback((updates: Partial<Project>) => {
+    setProjects(prevProjects => 
+      prevProjects.map(project => 
+        project.id === currentProjectId 
+          ? { ...project, ...updates }
+          : project
+      )
+    )
+  }, [currentProjectId])
+
+  // 处理视图切换时的状态重置
+  useEffect(() => {
+    // 当视图切换时，重置一些状态
+    if (viewMode === 'overview') {
+      // 概览模式：清理选中状态
+      setSelectedTaskId(null)
+    }
+    // 网络图和甘特图模式保持当前选中状态不变
+  }, [viewMode]) // 只依赖 viewMode，避免无限循环
+
   return (
-    <div className="h-screen flex bg-gray-50">
-      {/* 紧凑的侧边栏 */}
-      <aside className="w-40 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 shadow-sm">
-        <div className="p-3 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-700">项目</h2>
+    <div id="page-planning" className="h-full flex">
+      <aside className="w-64 bg-white border-r flex flex-col flex-shrink-0">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">我的所有项目</h2>
         </div>
-        <div className="flex-grow overflow-y-auto p-2 space-y-1">
+        <div id="project-list" className="flex-grow overflow-y-auto p-2 space-y-1">
           {projects.map(project => (
             <button
               key={project.id}
               onClick={() => setCurrentProjectId(project.id)}
-              className={`w-full text-left p-2 rounded-md text-xs hover:bg-gray-50 transition-colors ${
-                currentProjectId === project.id ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'text-gray-600'
+              className={`project-item w-full text-left p-2 rounded-md text-sm hover:bg-gray-100 ${
+                currentProjectId === project.id ? 'active' : ''
               }`}
             >
               {project.name}
             </button>
           ))}
         </div>
-        <div className="p-2 border-t border-gray-200">
-          <button className="w-full flex items-center justify-center gap-1 p-2 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-            <span>+</span> 新项目
+        <div className="p-2 border-t">
+          <button className="w-full flex items-center justify-center gap-2 p-2 rounded-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700">
+            <PlusCircle className="w-4 h-4" />
+            <span>创建新项目</span>
           </button>
         </div>
       </aside>
       
-      {/* 主画布区域 */}
       <div className="flex-grow flex flex-col relative">
-        {/* 紧凑的顶部工具栏 */}
-        <div className="h-12 bg-white border-b border-gray-200 flex justify-between items-center px-4 flex-shrink-0 shadow-sm">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-gray-800">
-              {currentProject?.name || '选择项目'}
-            </h1>
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {currentProject?.tasks.length || 0} 个任务
-            </span>
-          </div>
+        <div id="planning-header" className="p-4 border-b bg-white flex justify-between items-center z-20 flex-shrink-0">
           <div className="flex items-center gap-2">
+            <input 
+              type="text" 
+              value={currentProject?.name || '加载中...'} 
+              onChange={(e) => {
+                if (currentProject) {
+                  handleProjectUpdate({ name: e.target.value })
+                }
+              }}
+              className="text-xl lg:text-2xl font-bold bg-transparent focus:outline-none focus:bg-gray-100 rounded-lg p-1 -m-1"
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            {/* 视图切换按钮 */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => {
+                  setViewMode('overview')
+                  setViewKey(prev => prev + 1) // 强制重新渲染
+                }}
+                className={`px-3 py-1 text-sm rounded-md transition-all ${
+                  viewMode === 'overview' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('network')
+                  setViewKey(prev => prev + 1) // 强制重新渲染
+                }}
+                className={`px-3 py-1 text-sm rounded-md transition-all ${
+                  viewMode === 'network' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Network className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setViewMode('gantt')
+                  setViewKey(prev => prev + 1) // 强制重新渲染
+                }}
+                className={`px-3 py-1 text-sm rounded-md transition-all ${
+                  viewMode === 'gantt' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+              </button>
+            </div>
+
             <button 
               onClick={handleAddTask}
-              className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center gap-2"
             >
-              + 新任务
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">新任务</span>
             </button>
-            <button className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+            <button className="p-2 text-red-500 hover:bg-red-100 rounded-md">
+              <Trash2 className="w-5 h-5" />
             </button>
           </div>
         </div>
         
-        {/* 画布区域 - 占据剩余空间 */}
-        <div className="flex-grow relative bg-white">
-          {currentProject && (
-            <NetworkDiagram
-              tasks={currentProject.tasks}
-              connections={connections}
-              onTaskUpdate={handleTaskUpdate}
-              onTaskSelect={handleTaskSelect}
-              onTaskEdit={handleTaskEdit}
-              onConnectionCreate={handleConnectionCreate}
-              selectedTaskId={selectedTaskId}
-            />
-          )}
-        </div>
+        {!currentProject ? (
+          <div id="planning-empty-state" className="flex-grow items-center justify-center text-center">
+            <div>
+              <FolderSearch className="w-16 h-16 text-gray-300 mx-auto" />
+              <h3 className="mt-2 text-lg font-medium text-gray-700">没有选中的项目</h3>
+              <p className="mt-1 text-sm text-gray-500">请从左侧选择一个项目，或创建一个新项目。</p>
+            </div>
+          </div>
+        ) : (
+          <div className="relative w-full flex-grow">
+            {viewMode === 'overview' && (
+              <Overview
+                key={`overview-${viewKey}`}
+                project={currentProject}
+                onProjectUpdate={handleProjectUpdate}
+              />
+            )}
+            
+            {viewMode === 'network' && (
+              <div key={`network-${viewKey}`} className="absolute inset-0 w-full h-full">
+                <NetworkDiagram
+                  tasks={currentProject.tasks}
+                  connections={connections}
+                  onTaskUpdate={handleTaskUpdate}
+                  onTaskSelect={handleTaskSelect}
+                  onTaskEdit={handleTaskEdit}
+                  onConnectionCreate={handleConnectionCreate}
+                  selectedTaskId={selectedTaskId}
+                />
+              </div>
+            )}
+            
+            {viewMode === 'gantt' && (
+              <div key={`gantt-${viewKey}`} className="absolute inset-0 w-full h-full">
+                <GanttChart
+                  tasks={currentProject.tasks}
+                  selectedTaskId={selectedTaskId}
+                  onTaskSelect={handleTaskSelect}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 任务编辑器 */}

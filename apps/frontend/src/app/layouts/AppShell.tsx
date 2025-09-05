@@ -3,9 +3,9 @@ import { Outlet } from 'react-router-dom'
 
 export default function AppShell() {
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="bg-gray-100 text-gray-800">
       <NavBar />
-      <main className="mx-auto max-w-6xl px-4 pt-16 pb-6">
+      <main className="w-full pt-16 h-screen">
         <Outlet />
       </main>
     </div>
