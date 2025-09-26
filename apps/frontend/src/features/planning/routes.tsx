@@ -3,13 +3,11 @@ import { Outlet, RouteObject, useRoutes } from 'react-router-dom'
 import PlanningPage from './pages/PlanningPage'
 
 function PlanningLayout() {
+  // Immersive canvas wants full-bleed; no padding/header wrapper
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Planning</h1>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Outlet />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <Outlet />
+    </Suspense>
   )
 }
 

@@ -4,8 +4,7 @@ import SchedulePage from './pages/SchedulePage'
 
 function ScheduleLayout() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Schedule</h1>
+    <div className="pt-2 px-4 pb-0 flex-1 flex flex-col">
       <Suspense fallback={<div>Loading...</div>}>
         <Outlet />
       </Suspense>
