@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import Header from './Header'
@@ -34,16 +34,17 @@ type Props = {
   }) => void
 }
 
-export default function ComposeMode({ 
-  activeIdx, 
-  tasks, 
-  onDayChange, 
+export default function ComposeMode({
+  activeIdx,
+  tasks,
+  onDayChange,
   onToggleTask,
   onDeleteTask,
   onSaveTask,
-  onUpdateTask 
+  onUpdateTask
 }: Props) {
-  const { editingTask, clearEditingTask, startEditingTask, isComposeMode, isTransitioning, isExiting, exitComposeMode } = useComposeMode()
+  const { editingTask, clearEditingTask, startEditingTask, isComposeMode, isTransitioning, isExiting, exitComposeMode, finalizeExit } = useComposeMode()
+  const containerRef = useRef<HTMLDivElement>(null)
   const taskListRef = useRef<HTMLDivElement>(null)
   const [isAnimating, setIsAnimating] = useState(true)
   const [editPanelRightOffset, setEditPanelRightOffset] = useState(0) // 动态计算的编辑面板right值
@@ -54,6 +55,12 @@ export default function ComposeMode({
   // 退场阶段控制：编辑面板先退场 -> 新建面板退场 -> 任务列表滑回
   const [editExitDone, setEditExitDone] = useState(false)
   const [newExitDone, setNewExitDone] = useState(false)
+
+  // 记录本次会话是否曾经展示过“编辑面板”（用于两栏场景：从未打开编辑面板时，直接视为编辑退场已完成）
+  const hadEditPanelRef = useRef(false)
+  useEffect(() => {
+    if (editingTask) hadEditPanelRef.current = true
+  }, [editingTask])
 
   // 调试用：监控动画状态
   const debugAnimationState = () => {
@@ -82,11 +89,55 @@ export default function ComposeMode({
     return centeredLeft
   }
 
-  const initialCenteredPosition = calculateCenteredPosition()
+  const [initialCenteredPosition, setInitialCenteredPosition] = useState(calculateCenteredPosition())
   const [translateX, setTranslateX] = useState(initialCenteredPosition)
 
   // 计算目标位置：距离左边缘-6px（再向左移动6px）
   const targetPosition = -6
+
+  // 精确测量“共点”（主页面居中位置）：以容器实际宽度和列表实际宽度为准，避免偏移
+  useLayoutEffect(() => {
+    const measure = () => {
+      const containerEl = containerRef.current
+      const listEl = taskListRef.current
+      if (!containerEl || !listEl) return
+      const containerWidth = containerEl.getBoundingClientRect().width
+      const listWidth = listEl.getBoundingClientRect().width
+      const centeredMarginLeft = Math.round((containerWidth - listWidth) / 2)
+      if (centeredMarginLeft !== initialCenteredPosition) {
+        setInitialCenteredPosition(centeredMarginLeft)
+      }
+      // 初次进入或尚未滑到目标位时，确保从精确的“共点”出发
+      if (!isExiting && translateX !== targetPosition) {
+        setTranslateX(centeredMarginLeft)
+      }
+    }
+    measure()
+    const onResize = () => measure()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [initialCenteredPosition, isExiting, translateX, targetPosition])
+
+  // 校准：仅在进入时进行即时校准，避免在退场动画开始帧内二次写入导致跳变
+  useEffect(() => {
+    if (isExiting) return
+    const containerEl = containerRef.current
+    const listEl = taskListRef.current
+    if (!containerEl || !listEl) return
+    // 仅在应当处于共点（未开始滑到目标位）时校准
+    const shouldBeCentered = translateX !== targetPosition
+    if (!shouldBeCentered) return
+    const containerRect = containerEl.getBoundingClientRect()
+    const listRect = listEl.getBoundingClientRect()
+    const desiredLeft = Math.round(containerRect.left + (containerRect.width - listRect.width) / 2)
+    const actualLeft = Math.round(listRect.left)
+    const delta = desiredLeft - actualLeft
+    if (Math.abs(delta) >= 2) {
+      setTranslateX(prev => prev + delta)
+    }
+  }, [isExiting, translateX, targetPosition])
+
+
 
   // 进入编辑模式时：重置阶段标记并显示新建面板
   useEffect(() => {
@@ -96,8 +147,19 @@ export default function ComposeMode({
         setEditExitDone(false)
         setNewExitDone(false)
       }
+      // 重置“是否曾显示过编辑面板”的会话标记
+      hadEditPanelRef.current = false
     }
   }, [isComposeMode, isExiting, showNewPanel, editExitDone, newExitDone])
+
+
+  // 两栏场景兼容：如果本次会话从未展示过编辑面板，则在进入退出阶段时直接视为“编辑退场已完成”
+  useEffect(() => {
+    if (isExiting && !hadEditPanelRef.current && !editExitDone) {
+      setEditExitDone(true)
+    }
+  }, [isExiting, editExitDone])
+
 
   // 退出阶段：等编辑面板完全退场后，才触发新建面板退场
   useEffect(() => {
@@ -144,7 +206,7 @@ export default function ComposeMode({
       newPanelWidth
     }
   }
-  
+
   const { taskListWidth, editPanelWidth, newPanelWidth } = calculateFullWidthLayout()
 
   // 简化的固定布局计算
@@ -346,6 +408,22 @@ export default function ComposeMode({
     }
   }, [isExiting, newExitDone, initialCenteredPosition])
 
+  // 阶段3完成后：监听任务列表的 CSS 过渡结束事件，事件驱动地通知 Context 完成退出
+  useEffect(() => {
+    if (!(isExiting && newExitDone)) return
+    const el = taskListRef.current as unknown as HTMLElement | null
+    if (!el) return
+    const onTransitionEnd = (e: any) => {
+      const prop = e?.propertyName || ''
+      if (prop === 'margin-left') {
+        finalizeExit()
+      }
+    }
+    el.addEventListener('transitionend', onTransitionEnd)
+    return () => el.removeEventListener('transitionend', onTransitionEnd)
+  }, [isExiting, newExitDone, finalizeExit])
+
+
   // 组件挂载后立即开始动画
   useEffect(() => {
     // 立即开始动画
@@ -439,7 +517,16 @@ export default function ComposeMode({
 
 
   return (
-    <div className="relative h-full w-full overflow-visible" style={{ margin: 0, padding: 0 }}>
+    <div
+      ref={containerRef}
+      className="relative h-full w-full overflow-visible"
+      style={{
+        margin: 0,
+        padding: 0,
+        // 当进入退场阶段且新建面板已退出后，禁用本层指针事件，让主页面立即接管点击
+        pointerEvents: isExiting && newExitDone ? 'none' : 'auto'
+      }}
+    >
       {/* 第一栏：日程列表（1.5倍宽度） - 使用 variants 控制动画状态 */}
       <motion.div
         ref={taskListRef}
@@ -448,7 +535,7 @@ export default function ComposeMode({
           width: taskListWidth,
           marginLeft: `${translateX}px`, // 恢复滑动动效：从标准位置滑动到目标位置
           marginTop: '8px', // 与主页面保持一致的顶部间距
-          transition: 'margin-left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1)', // CSS 过渡：更快更紧凑
+          transition: 'margin-left 0.18s cubic-bezier(0.4, 0, 1, 1)', // CSS 过渡：最快、干脆利落
           // border: '2px solid red', // 临时边框已移除
           overflow: 'hidden', // 确保内容不会溢出
           boxSizing: 'border-box' // 确保边框包含在宽度内
@@ -573,7 +660,14 @@ export default function ComposeMode({
             restSpeed: 0.01
           }}
           onAnimationStart={() => console.log('🎬 新建面板动画开始')}
-          onAnimationComplete={() => console.log('✅ 新建面板动画完成')}
+          onAnimationComplete={() => {
+            // 直接在新建面板退场动画结束的同一刻，启动任务列表滑回，做到“零等待”
+            if (isExiting && !showNewPanel && !newExitDone) {
+              setTranslateX(initialCenteredPosition)
+              setNewExitDone(true)
+            }
+            console.log('✅ 新建面板动画完成')
+          }}
           style={{
             right: `${newPanelRight}px`, // 固定布局：距离右边缘10px
             width: `${newPanelWidth}px`,

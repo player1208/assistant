@@ -8,6 +8,7 @@ type ComposeModeState = {
   editingTask: Task | null
   enterComposeMode: () => void
   exitComposeMode: () => void
+  finalizeExit: () => void
   startEditingTask: (task: Task) => void
   clearEditingTask: () => void
 }
@@ -29,8 +30,16 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
     setIsComposeMode(true)
     setEditingTask(null) // 默认为新建模式
 
-    // 等待任务列表滑动动画完成后重置过渡状态
+    // 等待任务列表滑动动画完成后重置过渡状态（保持不变）
     setTimeout(() => setIsTransitioning(false), 2500)
+  }
+
+  // 由动画完成事件触发的“退出完成”回调（事件驱动）
+  const finalizeExit = () => {
+    console.log('🧹 finalizeExit: 动画已完成，重置 isTransitioning/isExiting，并确保 isComposeMode=false')
+    setIsTransitioning(false)
+    setIsExiting(false)
+    setIsComposeMode(false)
   }
 
   const exitComposeMode = () => {
@@ -48,15 +57,8 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
       setIsComposeMode(false)
     }, 800)
 
-    // 阶段3: 任务列表滑回居中 (800ms后开始)
-    // 这个在ComposeMode组件中处理
-
-    // 完全结束：给足够的时间让“编辑退场 -> 新建退场 -> 列表滑回”完整播放
-    setTimeout(() => {
-      console.log('✅ 退场动画完成，重置所有状态')
-      setIsTransitioning(false)
-      setIsExiting(false)
-    }, 2400)
+    // 阶段3: 任务列表滑回居中 在 ComposeMode 组件中由动画事件驱动触发
+    // 完全结束：改为事件驱动，由 finalizeExit() 负责重置，不再使用固定计时器
   }
 
   const startEditingTask = (task: Task) => {
@@ -85,6 +87,7 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
         editingTask,
         enterComposeMode,
         exitComposeMode,
+        finalizeExit,
         startEditingTask,
         clearEditingTask,
       }}

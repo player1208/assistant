@@ -191,7 +191,7 @@ function SchedulePageContent() {
     <>
       <motion.div
         className="bg-white lg:shadow-xl lg:rounded-lg text-[15px] flex-1 pb-8"
-        initial={{ opacity: 0, y: 20 }}
+        initial={false}
         animate={{
           opacity: 1,
           y: 0,
