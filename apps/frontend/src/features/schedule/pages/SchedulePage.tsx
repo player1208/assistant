@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import Header from '../components/Header'
 import WeekdaySelector from '../components/WeekdaySelector'
@@ -18,7 +18,29 @@ function SchedulePageContent() {
   const [, setActiveDate] = useState<Date>(today)
   const [tasks, setTasks] = useState<DayTasks>(() => getMockTasks(keyOf(today)))
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const { isComposeMode, isTransitioning, enterComposeMode, exitComposeMode } = useComposeMode()
+  const { isComposeMode, isTransitioning, isExiting, enterComposeMode, exitComposeMode } = useComposeMode()
+
+  // 计算与编辑模式一致的任务列表宽度
+  const calculateTaskListWidth = () => {
+    const viewportWidth = window.innerWidth
+    // 使用与ComposeMode相同的计算逻辑
+    const fixedSpacing = 10 + 16 + 16 + 10 // 总计52px固定间距
+    const availableWidth = viewportWidth - fixedSpacing
+    const unitWidth = availableWidth / 6
+    return Math.floor(unitWidth * 4) - 16  // 4份，然后缩小16px
+  }
+
+  const [taskListWidth, setTaskListWidth] = useState(calculateTaskListWidth())
+
+  // 监听窗口大小变化，动态更新任务列表宽度
+  useEffect(() => {
+    const handleResize = () => {
+      setTaskListWidth(calculateTaskListWidth())
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   function keyOf(date: Date) {
     return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
@@ -128,8 +150,8 @@ function SchedulePageContent() {
     exitComposeMode()
   }
 
-  // 谱曲模式视图
-  if (isComposeMode && shouldUseComposeMode) {
+  // 谱曲模式视图（在退出阶段保持挂载以确保退场动画可见）
+  if ((isComposeMode || isExiting) && shouldUseComposeMode) {
     return (
       <>
         <div className="flex h-full w-full overflow-visible">
@@ -168,7 +190,7 @@ function SchedulePageContent() {
   return (
     <>
       <motion.div
-        className="bg-white lg:shadow-xl max-w-6xl w-full mx-auto mt-2 mb-0 lg:rounded-lg text-[15px] flex-1 pb-8"
+        className="bg-white lg:shadow-xl lg:rounded-lg text-[15px] flex-1 pb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{
           opacity: 1,
@@ -182,6 +204,11 @@ function SchedulePageContent() {
         }}
         layout
         style={{
+          width: taskListWidth,
+          marginLeft: 'auto', // 居中显示
+          marginRight: 'auto', // 居中显示
+          marginTop: '8px',
+          marginBottom: 0,
           // 移除 transform，避免与 ComposeMode 的动画冲突
           opacity: isTransitioning ? 0.85 : 1,
           filter: isTransitioning ? 'blur(1px)' : 'blur(0)',

@@ -4,6 +4,7 @@ import { Task } from '../model'
 type ComposeModeState = {
   isComposeMode: boolean
   isTransitioning: boolean
+  isExiting: boolean
   editingTask: Task | null
   enterComposeMode: () => void
   exitComposeMode: () => void
@@ -16,6 +17,7 @@ const ComposeModeContext = createContext<ComposeModeState | undefined>(undefined
 export function ComposeModeProvider({ children }: { children: ReactNode }) {
   const [isComposeMode, setIsComposeMode] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const enterComposeMode = () => {
@@ -32,18 +34,29 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
   }
 
   const exitComposeMode = () => {
+    console.log('🚪 开始退出编辑模式...')
     setIsTransitioning(true)
-    
-    // 延迟切换模式，等待退出动画
+    setIsExiting(true)
+
+    // 阶段1: 编辑面板向右收回 (立即开始)
+    console.log('📝 阶段1: 编辑面板向右收回')
+    setEditingTask(null)
+
+    // 阶段2: 新建面板向下掉出 (延迟到800ms，给新建面板足够的退场动画时间)
     setTimeout(() => {
+      console.log('📋 阶段2: 新建面板向下掉出 - 设置 isComposeMode = false')
       setIsComposeMode(false)
-      setEditingTask(null)
-    }, 400)
-    
-    // 再延迟一点重置过渡状态
+    }, 800)
+
+    // 阶段3: 任务列表滑回居中 (800ms后开始)
+    // 这个在ComposeMode组件中处理
+
+    // 完全结束：给足够的时间让“编辑退场 -> 新建退场 -> 列表滑回”完整播放
     setTimeout(() => {
+      console.log('✅ 退场动画完成，重置所有状态')
       setIsTransitioning(false)
-    }, 600)
+      setIsExiting(false)
+    }, 2400)
   }
 
   const startEditingTask = (task: Task) => {
@@ -68,6 +81,7 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
       value={{
         isComposeMode,
         isTransitioning,
+        isExiting,
         editingTask,
         enterComposeMode,
         exitComposeMode,

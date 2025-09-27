@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import Header from './Header'
@@ -43,29 +43,73 @@ export default function ComposeMode({
   onSaveTask,
   onUpdateTask 
 }: Props) {
-  const { editingTask, clearEditingTask, startEditingTask, isComposeMode } = useComposeMode()
+  const { editingTask, clearEditingTask, startEditingTask, isComposeMode, isTransitioning, isExiting, exitComposeMode } = useComposeMode()
   const taskListRef = useRef<HTMLDivElement>(null)
   const [isAnimating, setIsAnimating] = useState(true)
   const [editPanelRightOffset, setEditPanelRightOffset] = useState(0) // 动态计算的编辑面板right值
   const hasLoggedRef = useRef(false) // 防止重复输出
-  // 计算标准模式下任务列表的真实位置（居中布局）
-  const calculateStandardModePosition = () => {
-    const screenWidth = window.innerWidth
-    const maxWidth = 1152 // max-w-6xl = 72rem = 1152px
-    const actualWidth = Math.min(screenWidth, maxWidth)
-    const leftMargin = (screenWidth - actualWidth) / 2
-    return leftMargin
+
+  // 新建面板的显示状态 - 使用独立状态来确保 AnimatePresence 能正确检测变化
+  const [showNewPanel, setShowNewPanel] = useState(false)
+  // 退场阶段控制：编辑面板先退场 -> 新建面板退场 -> 任务列表滑回
+  const [editExitDone, setEditExitDone] = useState(false)
+  const [newExitDone, setNewExitDone] = useState(false)
+
+  // 调试用：监控动画状态
+  const debugAnimationState = () => {
+    console.log('🔍 当前动画状态:', {
+      isComposeMode,
+      isExiting,
+      isTransitioning,
+      editingTask: editingTask ? editingTask.id : null
+    })
   }
 
-  // 使用 useMemo 缓存标准位置，避免重复计算
-  const standardPosition = useMemo(() => calculateStandardModePosition(), [])
-  // 计算补偿父容器偏移的目标位置
-  const targetPosition = -13 // 再向左移动10px：-3px - 10px = -13px
+  // 精确计算主页面任务列表的居中位置
+  const calculateCenteredPosition = () => {
+    const screenWidth = window.innerWidth
+    const appShellPadding = 8 // AppShell的px-2左padding
+    const containerWidth = screenWidth - (appShellPadding * 2) // AppShell内部可用宽度
 
-  // 从标准模式的真实位置开始
-  const [translateX, setTranslateX] = useState(standardPosition)
+    // 使用与主页面相同的宽度计算
+    const fixedSpacing = 10 + 16 + 16 + 10
+    const availableWidth = screenWidth - fixedSpacing
+    const unitWidth = availableWidth / 6
+    const taskListWidth = Math.floor(unitWidth * 4) - 16
 
+    // 在AppShell容器内居中的位置
+    const centeredLeft = (containerWidth - taskListWidth) / 2
+    return centeredLeft
+  }
 
+  const initialCenteredPosition = calculateCenteredPosition()
+  const [translateX, setTranslateX] = useState(initialCenteredPosition)
+
+  // 计算目标位置：距离左边缘-6px（再向左移动6px）
+  const targetPosition = -6
+
+  // 进入编辑模式时：重置阶段标记并显示新建面板
+  useEffect(() => {
+    if (isComposeMode && !isExiting) {
+      if (!showNewPanel) setShowNewPanel(true)
+      if (editExitDone || newExitDone) {
+        setEditExitDone(false)
+        setNewExitDone(false)
+      }
+    }
+  }, [isComposeMode, isExiting, showNewPanel, editExitDone, newExitDone])
+
+  // 退出阶段：等编辑面板完全退场后，才触发新建面板退场
+  useEffect(() => {
+    if (isExiting && editExitDone && showNewPanel) {
+      setShowNewPanel(false)
+    }
+  }, [isExiting, editExitDone, showNewPanel])
+
+  // 调试用：监控状态变化
+  useEffect(() => {
+    debugAnimationState()
+  }, [isComposeMode, isExiting, isTransitioning, editingTask])
 
   // 编辑面板的footer引用
   const editFooterRef = useRef<HTMLDivElement>(null)
@@ -161,7 +205,7 @@ export default function ComposeMode({
         }
 
         console.log('🔍 滑动状态调试:')
-        console.log('   - 标准位置(standardPosition):', standardPosition.toFixed(2), 'px')
+        console.log('   - 初始居中位置:', initialCenteredPosition.toFixed(2), 'px')
         console.log('   - 目标位置(targetPosition):', targetPosition, 'px')
         console.log('   - 当前translateX:', translateX.toFixed(2), 'px')
         console.log('   - 计算的最终位置: 父容器left +', translateX.toFixed(2), 'px')
@@ -282,15 +326,25 @@ export default function ComposeMode({
   }, [editingTask, isComposeMode])
   const [, setScrollbarWidth] = useState<number>(0)
 
-  // 组件挂载后开始从标准位置动画到目标位置
+  // 组件挂载后开始从居中位置动画到目标位置
   useEffect(() => {
+    console.log('🎯 开始滑动动画，从居中位置:', initialCenteredPosition.toFixed(2), 'px 到目标位置:', targetPosition, 'px')
+
     // 使用双重 requestAnimationFrame 确保渲染完全稳定
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setTranslateX(targetPosition)
       })
     })
-  }, [standardPosition, targetPosition]) // 依赖于计算出的位置
+  }, [initialCenteredPosition, targetPosition])
+
+  // 阶段3：在新建面板退场完成后，任务列表滑回居中
+  useEffect(() => {
+    if (isExiting && newExitDone) {
+      console.log('🏠 新建面板退场完成，开始任务列表滑回居中:', initialCenteredPosition.toFixed(2), 'px')
+      setTranslateX(initialCenteredPosition)
+    }
+  }, [isExiting, newExitDone, initialCenteredPosition])
 
   // 组件挂载后立即开始动画
   useEffect(() => {
@@ -353,6 +407,7 @@ export default function ComposeMode({
     if (editingTask) {
       // 更新现有任务
       onUpdateTask(editingTask.id, formData)
+      clearEditingTask()
     } else {
       // 创建新任务：记录创建前的所有ID，待父级回传新tasks时比对找出新ID
       const prevIds = new Set<string>([
@@ -361,8 +416,10 @@ export default function ComposeMode({
       ])
       awaitingCreatePrevIds.current = prevIds
       onSaveTask(formData)
+      // 新建任务后，退出编辑模式并触发退场动画
+      console.log('📝 新建任务完成，开始退出编辑模式')
+      exitComposeMode()
     }
-    clearEditingTask()
   }
 
   const handleTaskClick = (task: Task) => {
@@ -390,7 +447,8 @@ export default function ComposeMode({
         style={{
           width: taskListWidth,
           marginLeft: `${translateX}px`, // 恢复滑动动效：从标准位置滑动到目标位置
-          transition: 'margin-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // CSS 过渡
+          marginTop: '8px', // 与主页面保持一致的顶部间距
+          transition: 'margin-left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1)', // CSS 过渡：更快更紧凑
           // border: '2px solid red', // 临时边框已移除
           overflow: 'hidden', // 确保内容不会溢出
           boxSizing: 'border-box' // 确保边框包含在宽度内
@@ -418,7 +476,7 @@ export default function ComposeMode({
 
       {/* 第二栏：编辑面板 - 使用 Portal 固定到 viewport，避免随滚动/父级 transform 影响 */}
       {createPortal(
-        <AnimatePresence mode="wait">
+        <AnimatePresence onExitComplete={() => setEditExitDone(true)}>
           {editingTask && (
             <motion.div
               key="edit-panel"
@@ -430,7 +488,17 @@ export default function ComposeMode({
               }}
               initial={{ x: "100%", opacity: 0, scale: 0.95 }}
               animate={{ x: 0, opacity: 1, scale: 1 }}
-              exit={{ x: "100%", opacity: 0, scale: 0.95 }}
+              exit={{
+                x: "100%",
+                opacity: 0,
+                scale: 0.9,
+                transition: {
+                  type: "spring",
+                  stiffness: 420,
+                  damping: 28,
+                  mass: 0.6
+                }
+              }}
               transition={{
                 type: "spring",
                 stiffness: 200,  // 降低弹性，让滑入更平滑
@@ -439,7 +507,8 @@ export default function ComposeMode({
                 restDelta: 0.01,
                 restSpeed: 0.01
               }}
-
+              onAnimationStart={() => console.log('🎬 编辑面板动画开始')}
+              onAnimationComplete={() => console.log('✅ 编辑面板动画完成')}
             >
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -470,17 +539,29 @@ export default function ComposeMode({
 
       {/* 第三栏：新建日程模块 - 使用 Portal 固定到 viewport */}
       {createPortal(
-        <AnimatePresence>
-          {isComposeMode && (
+        <AnimatePresence onExitComplete={() => setNewExitDone(true)}>
+          {showNewPanel && (
             <motion.div
-          key="new-schedule-panel"
-          className="fixed top-[69px] z-30 bg-white border-l border-t-2 border-b-2 border-white/30 shadow-lg overflow-y-auto rounded-l-lg"
+            key="new-schedule-panel"
+            className="fixed top-[69px] z-30 bg-white border-l border-t-2 border-b-2 border-white/30 shadow-lg overflow-y-auto rounded-l-lg"
           initial={{ y: -600, opacity: 0, scale: 0.7, rotateX: -15 }}
           animate={{
             y: 0,
             opacity: 1,
             scale: 1,
             rotateX: 0
+          }}
+          exit={{
+            y: 600,
+            opacity: 0,
+            scale: 0.8,
+            rotateX: 15,
+            transition: {
+              type: "spring",
+              stiffness: 320,
+              damping: 24,
+              mass: 0.9
+            }
           }}
           transition={{
             type: "spring",
@@ -491,8 +572,8 @@ export default function ComposeMode({
             restDelta: 0.01,
             restSpeed: 0.01
           }}
-
-
+          onAnimationStart={() => console.log('🎬 新建面板动画开始')}
+          onAnimationComplete={() => console.log('✅ 新建面板动画完成')}
           style={{
             right: `${newPanelRight}px`, // 固定布局：距离右边缘10px
             width: `${newPanelWidth}px`,
@@ -516,7 +597,7 @@ export default function ComposeMode({
               showDeleteButton={false}
             />
           </motion.div>
-            </motion.div>
+          </motion.div>
           )}
         </AnimatePresence>,
         document.body
