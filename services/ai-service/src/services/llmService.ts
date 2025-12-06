@@ -83,13 +83,13 @@ class LLMService {
     this.model = process.env.LLM_MODEL || ENV.LLM_MODEL
     this.timeout = parseInt(process.env.LLM_TIMEOUT || String(ENV.LLM_TIMEOUT), 10)
 
-    // AI-1: 意图解析器 (快速响应) - DeepSeek-V3 (免费版)
-    // 注意：Pro/deepseek-ai/DeepSeek-V3 需要付费，这里使用免费版
+    // AI-1: 意图解析器 (快速响应) - 微调后的 Qwen2.5-7B
+    // 使用硅基流动 LoRA 微调模型，专门用于意图识别
     this.parserConfig = {
       provider: this.provider,
       apiKey: this.apiKey,
       apiEndpoint: this.apiEndpoint,
-      model: process.env.LLM_PARSER_MODEL || 'deepseek-ai/DeepSeek-V3',
+      model: process.env.LLM_PARSER_MODEL || 'ft:LoRA/Qwen/Qwen2.5-7B-Instruct:d4k8nmlsssvc73ej5ip0:AssistanceAi1v1:zilcznfgzqdxoeaxzung-ckpt_step_126',
       maxTokens: parseInt(process.env.LLM_PARSER_MAX_TOKENS || '500', 10),
       timeout: this.timeout,
     }
