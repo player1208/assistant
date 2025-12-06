@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "react-day-picker/style.css";
 
 /* 应用级基础高度 */
 html, body, #root { height: 100%; }

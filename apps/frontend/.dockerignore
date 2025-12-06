@@ -1,0 +1,34 @@
+# 依赖目录
+node_modules
+**/node_modules
+
+# 构建产物
+dist
+**/dist
+
+# 开发文件
+*.log
+*.md
+.git
+.gitignore
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# 测试
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage
+
+# 其他
+.DS_Store
+Thumbs.db
+

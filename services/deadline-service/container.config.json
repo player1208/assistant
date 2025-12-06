@@ -1,0 +1,22 @@
+{
+  "$schema": "https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/guide/settings/container-config.html",
+  "containerPort": 80,
+  "dockerfilePath": "Dockerfile",
+  "buildDir": "",
+  "minNum": 0,
+  "maxNum": 3,
+  "cpu": 0.25,
+  "mem": 0.5,
+  "policyType": "cpu",
+  "policyThreshold": 60,
+  "envParams": {
+    "NODE_ENV": "production",
+    "MONGODB_URI": "${MONGODB_URI}"
+  },
+  "customLogs": {
+    "enabled": true,
+    "logPath": "/app/logs"
+  },
+  "initialDelaySeconds": 15
+}
+

@@ -23,3 +23,11 @@
 hs_err_pid*
 replay_pid*
 node_modules
+
+# Environment variables (包含 API Key，不要提交！)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/

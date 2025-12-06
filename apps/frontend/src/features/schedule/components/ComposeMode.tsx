@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useLayoutEffect } from 'react'
+﻿import { useRef, useEffect, useState, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import Header from './Header'
@@ -20,17 +20,21 @@ type Props = {
     title: string
     description: string
     isAllDay: boolean
+    startDate: string
     startTime: string
+    endDate: string
+    endTime: string
     goalColor: TaskColor
-    isUrgent: boolean
   }) => void
   onUpdateTask: (taskId: string, data: {
     title: string
     description: string
     isAllDay: boolean
+    startDate: string
     startTime: string
+    endDate: string
+    endTime: string
     goalColor: TaskColor
-    isUrgent: boolean
   }) => void
 }
 
@@ -43,12 +47,9 @@ export default function ComposeMode({
   onSaveTask,
   onUpdateTask
 }: Props) {
-  const { editingTask, clearEditingTask, startEditingTask, isComposeMode, isTransitioning, isExiting, exitComposeMode, finalizeExit } = useComposeMode()
+  const { editingTask, clearEditingTask, startEditingTask, isComposeMode, isExiting, exitComposeMode, finalizeExit } = useComposeMode()
   const containerRef = useRef<HTMLDivElement>(null)
   const taskListRef = useRef<HTMLDivElement>(null)
-  const [isAnimating, setIsAnimating] = useState(true)
-  const [editPanelRightOffset, setEditPanelRightOffset] = useState(0) // 动态计算的编辑面板right值
-  const hasLoggedRef = useRef(false) // 防止重复输出
 
   // 新建面板的显示状态 - 使用独立状态来确保 AnimatePresence 能正确检测变化
   const [showNewPanel, setShowNewPanel] = useState(false)
@@ -56,21 +57,6 @@ export default function ComposeMode({
   const [editExitDone, setEditExitDone] = useState(false)
   const [newExitDone, setNewExitDone] = useState(false)
 
-  // 记录本次会话是否曾经展示过“编辑面板”（用于两栏场景：从未打开编辑面板时，直接视为编辑退场已完成）
-  const hadEditPanelRef = useRef(false)
-  useEffect(() => {
-    if (editingTask) hadEditPanelRef.current = true
-  }, [editingTask])
-
-  // 调试用：监控动画状态
-  const debugAnimationState = () => {
-    console.log('🔍 当前动画状态:', {
-      isComposeMode,
-      isExiting,
-      isTransitioning,
-      editingTask: editingTask ? editingTask.id : null
-    })
-  }
 
   // 精确计算主页面任务列表的居中位置
   const calculateCenteredPosition = () => {
@@ -89,53 +75,28 @@ export default function ComposeMode({
     return centeredLeft
   }
 
-  const [initialCenteredPosition, setInitialCenteredPosition] = useState(calculateCenteredPosition())
-  const [translateX, setTranslateX] = useState(initialCenteredPosition)
-
   // 计算目标位置：距离左边缘-6px（再向左移动6px）
   const targetPosition = -6
+  
+  // 动画位置状态：null = 还没测量，数字 = 当前 marginLeft 值
+  // 直接使用目标位置作为初始位置，避免跳动
+  const [currentPosition, setCurrentPosition] = useState<number | null>(targetPosition)
+  // 记住居中位置，用于退场时滑回
+  const [centeredPosition, setCenteredPosition] = useState<number>(calculateCenteredPosition())
 
-  // 精确测量“共点”（主页面居中位置）：以容器实际宽度和列表实际宽度为准，避免偏移
+  // 测量精确的居中位置（仅用于退场动画）
   useLayoutEffect(() => {
-    const measure = () => {
-      const containerEl = containerRef.current
-      const listEl = taskListRef.current
-      if (!containerEl || !listEl) return
-      const containerWidth = containerEl.getBoundingClientRect().width
-      const listWidth = listEl.getBoundingClientRect().width
-      const centeredMarginLeft = Math.round((containerWidth - listWidth) / 2)
-      if (centeredMarginLeft !== initialCenteredPosition) {
-        setInitialCenteredPosition(centeredMarginLeft)
-      }
-      // 初次进入或尚未滑到目标位时，确保从精确的“共点”出发
-      if (!isExiting && translateX !== targetPosition) {
-        setTranslateX(centeredMarginLeft)
-      }
-    }
-    measure()
-    const onResize = () => measure()
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [initialCenteredPosition, isExiting, translateX, targetPosition])
-
-  // 校准：仅在进入时进行即时校准，避免在退场动画开始帧内二次写入导致跳变
-  useEffect(() => {
-    if (isExiting) return
     const containerEl = containerRef.current
     const listEl = taskListRef.current
     if (!containerEl || !listEl) return
-    // 仅在应当处于共点（未开始滑到目标位）时校准
-    const shouldBeCentered = translateX !== targetPosition
-    if (!shouldBeCentered) return
-    const containerRect = containerEl.getBoundingClientRect()
-    const listRect = listEl.getBoundingClientRect()
-    const desiredLeft = Math.round(containerRect.left + (containerRect.width - listRect.width) / 2)
-    const actualLeft = Math.round(listRect.left)
-    const delta = desiredLeft - actualLeft
-    if (Math.abs(delta) >= 2) {
-      setTranslateX(prev => prev + delta)
-    }
-  }, [isExiting, translateX, targetPosition])
+
+    const containerWidth = containerEl.getBoundingClientRect().width
+    const listWidth = listEl.getBoundingClientRect().width
+    const centeredMarginLeft = Math.round((containerWidth - listWidth) / 2)
+
+    // 保存居中位置（用于退场时滑回）
+    setCenteredPosition(centeredMarginLeft)
+  }, []) // 只在挂载时执行一次
 
 
 
@@ -147,31 +108,23 @@ export default function ComposeMode({
         setEditExitDone(false)
         setNewExitDone(false)
       }
-      // 重置“是否曾显示过编辑面板”的会话标记
-      hadEditPanelRef.current = false
+    }
+    // 退场完成后，重置位置状态，以便下次进场时重新初始化
+    if (!isComposeMode && !isExiting) {
+      // 重置位置为 null，下次挂载时会重新测量
+      setCurrentPosition(null)
     }
   }, [isComposeMode, isExiting, showNewPanel, editExitDone, newExitDone])
 
 
-  // 两栏场景兼容：如果本次会话从未展示过编辑面板，则在进入退出阶段时直接视为“编辑退场已完成”
-  useEffect(() => {
-    if (isExiting && !hadEditPanelRef.current && !editExitDone) {
-      setEditExitDone(true)
-    }
-  }, [isExiting, editExitDone])
 
 
-  // 退出阶段：等编辑面板完全退场后，才触发新建面板退场
+  // 退出阶段：编辑面板和新建面板同时退场
   useEffect(() => {
-    if (isExiting && editExitDone && showNewPanel) {
+    if (isExiting && showNewPanel) {
       setShowNewPanel(false)
     }
-  }, [isExiting, editExitDone, showNewPanel])
-
-  // 调试用：监控状态变化
-  useEffect(() => {
-    debugAnimationState()
-  }, [isComposeMode, isExiting, isTransitioning, editingTask])
+  }, [isExiting, showNewPanel])
 
   // 编辑面板的footer引用
   const editFooterRef = useRef<HTMLDivElement>(null)
@@ -217,12 +170,6 @@ export default function ComposeMode({
     // 编辑面板：在新建面板左侧16px处
     const editPanelRight = newPanelRight + newPanelWidth + 16
 
-    console.log('� 固定布局计算:')
-    console.log('   - 新建面板right:', newPanelRight, 'px')
-    console.log('   - 编辑面板right:', editPanelRight, 'px')
-    console.log('   - 任务列表滑动: 从标准位置滑动到targetPosition(2px)')
-    console.log('   - 最终位置: AppShell(8px) + translateX(2px) = 10px距离屏幕左边缘 ✅')
-
     return {
       newPanelRight,
       editPanelRight
@@ -231,205 +178,14 @@ export default function ComposeMode({
 
   const { newPanelRight, editPanelRight } = calculateFixedLayout()
 
-  // 实际DOM位置检查 - 只执行一次
-  useEffect(() => {
-    if (hasLoggedRef.current) return // 防止重复输出
-
-    const checkPositions = () => {
-      const taskListEl = taskListRef.current
-      if (taskListEl) {
-        const taskListRect = taskListEl.getBoundingClientRect()
-
-        console.log('📍 任务列表实际DOM位置:')
-        console.log('   - 距离屏幕左边缘:', taskListRect.left.toFixed(2), 'px')
-        console.log('   - 距离屏幕右边缘:', (window.innerWidth - taskListRect.right).toFixed(2), 'px')
-        console.log('   - 宽度:', taskListRect.width.toFixed(2), 'px')
-        console.log('   - 位置范围:', taskListRect.left.toFixed(2), 'px →', taskListRect.right.toFixed(2), 'px')
-        console.log('   - 屏幕宽度:', window.innerWidth, 'px')
-        console.log('🔍 父容器层级调试:')
-
-        // 检查所有父容器的位置
-        let currentEl = taskListEl.parentElement
-        let level = 1
-        while (currentEl && level <= 5) {
-          const rect = currentEl.getBoundingClientRect()
-          const computedStyle = window.getComputedStyle(currentEl)
-          console.log(`   - 父容器${level}:`, {
-            tagName: currentEl.tagName,
-            className: currentEl.className,
-            left: rect.left.toFixed(2) + 'px',
-            paddingLeft: computedStyle.paddingLeft,
-            marginLeft: computedStyle.marginLeft,
-            width: rect.width.toFixed(2) + 'px'
-          })
-          currentEl = currentEl.parentElement
-          level++
-        }
-
-        console.log('🔍 滑动状态调试:')
-        console.log('   - 初始居中位置:', initialCenteredPosition.toFixed(2), 'px')
-        console.log('   - 目标位置(targetPosition):', targetPosition, 'px')
-        console.log('   - 当前translateX:', translateX.toFixed(2), 'px')
-        console.log('   - 计算的最终位置: 父容器left +', translateX.toFixed(2), 'px')
-
-        // 检查是否达到目标10px
-        const actualLeftDistance = taskListRect.left
-        if (Math.abs(actualLeftDistance - 10) < 1) {
-          console.log('✅ 任务列表位置正确！距离屏幕左边缘', actualLeftDistance.toFixed(2), 'px')
-        } else {
-          console.log('❌ 任务列表位置偏差！目标10px，实际', actualLeftDistance.toFixed(2), 'px，偏差', (actualLeftDistance - 10).toFixed(2), 'px')
-        }
-
-        hasLoggedRef.current = true // 标记已输出
-      }
-
-      // 检查编辑面板
-      setTimeout(() => {
-        const fixedElements = Array.from(document.querySelectorAll('.fixed'))
-        const editPanel = fixedElements.find(el => {
-          const classes = el.className
-          return classes.includes('shadow-xl') && classes.includes('border-l') && !classes.includes('shadow-lg')
-        })
-
-        if (editPanel) {
-          const editRect = editPanel.getBoundingClientRect()
-          console.log('📍 编辑面板实际DOM位置:')
-          console.log('   - 距离屏幕左边缘:', editRect.left.toFixed(2), 'px')
-          console.log('   - 距离屏幕右边缘:', (window.innerWidth - editRect.right).toFixed(2), 'px')
-          console.log('   - 宽度:', editRect.width.toFixed(2), 'px')
-          console.log('   - 位置范围:', editRect.left.toFixed(2), 'px →', editRect.right.toFixed(2), 'px')
-
-          // 验证与任务列表的间距
-          const taskListEl = taskListRef.current
-          if (taskListEl) {
-            const taskListRect = taskListEl.getBoundingClientRect()
-            const actualGap = editRect.left - taskListRect.right
-            if (Math.abs(actualGap - 16) < 1) {
-              console.log('✅ 任务列表→编辑面板间距正确！', actualGap.toFixed(2), 'px')
-            } else {
-              console.log('❌ 任务列表→编辑面板间距偏差！目标16px，实际', actualGap.toFixed(2), 'px，偏差', (actualGap - 16).toFixed(2), 'px')
-            }
-          }
-        }
-      }, 200)
-
-      // 检查新建面板
-      setTimeout(() => {
-        const fixedElements = Array.from(document.querySelectorAll('.fixed'))
-        const newPanel = fixedElements.find(el => {
-          const classes = el.className
-          return classes.includes('shadow-lg') && classes.includes('border-l')
-        })
-
-        if (newPanel) {
-          const newRect = newPanel.getBoundingClientRect()
-          console.log('📍 新建面板实际DOM位置:')
-          console.log('   - 距离屏幕左边缘:', newRect.left.toFixed(2), 'px')
-          console.log('   - 距离屏幕右边缘:', (window.innerWidth - newRect.right).toFixed(2), 'px')
-          console.log('   - 宽度:', newRect.width.toFixed(2), 'px')
-          console.log('   - 位置范围:', newRect.left.toFixed(2), 'px →', newRect.right.toFixed(2), 'px')
-
-          // 检查是否距离右边缘10px
-          const actualRightDistance = window.innerWidth - newRect.right
-          if (Math.abs(actualRightDistance - 10) < 1) {
-            console.log('✅ 新建面板位置正确！距离屏幕右边缘', actualRightDistance.toFixed(2), 'px')
-          } else {
-            console.log('❌ 新建面板位置偏差！目标10px，实际', actualRightDistance.toFixed(2), 'px，偏差', (actualRightDistance - 10).toFixed(2), 'px')
-          }
-
-          // 验证与编辑面板的间距
-          const fixedElements = Array.from(document.querySelectorAll('.fixed'))
-          const editPanel = fixedElements.find(el => {
-            const classes = el.className
-            return classes.includes('shadow-xl') && classes.includes('border-l') && !classes.includes('shadow-lg')
-          })
-          if (editPanel) {
-            const editRect = editPanel.getBoundingClientRect()
-            const panelGap = newRect.left - editRect.right
-            if (Math.abs(panelGap - 16) < 1) {
-              console.log('✅ 编辑面板→新建面板间距正确！', panelGap.toFixed(2), 'px')
-            } else {
-              console.log('❌ 编辑面板→新建面板间距偏差！目标16px，实际', panelGap.toFixed(2), 'px，偏差', (panelGap - 16).toFixed(2), 'px')
-            }
-
-            // 检查是否重叠
-            if (panelGap < 0) {
-              console.log('🚨 警告: 编辑面板和新建面板重叠了!', Math.abs(panelGap).toFixed(2), 'px')
-            }
-          }
-        }
-      }, 300)
-    }
-
-    setTimeout(checkPositions, 100)
-  }, [taskListWidth, editPanelWidth, newPanelWidth]) // 只在宽度变化时执行
-
-  // 当编辑任务变化时，重置输出标记并立即更新位置
-  useEffect(() => {
-    hasLoggedRef.current = false
-
-    // 当编辑面板出现时，立即更新位置
-    if (editingTask) {
-      setTimeout(() => {
-        const taskListEl = taskListRef.current
-        if (taskListEl) {
-          const taskListRect = taskListEl.getBoundingClientRect()
-          const actualTaskListRight = taskListRect.right
-          const targetEditPanelLeft = actualTaskListRight + 16
-          const editPanelRightValue = window.innerWidth - targetEditPanelLeft
-          setEditPanelRightOffset(editPanelRightValue)
-
-          console.log('🎯 编辑面板出现时位置更新:')
-          console.log('   - 任务列表实际右边缘:', actualTaskListRight.toFixed(2), 'px')
-          console.log('   - 编辑面板right值:', editPanelRightValue.toFixed(2), 'px')
-        }
-      }, 100) // 稍微延迟确保DOM已更新
-    }
-  }, [editingTask, isComposeMode])
   const [, setScrollbarWidth] = useState<number>(0)
-
-  // 组件挂载后开始从居中位置动画到目标位置
-  useEffect(() => {
-    console.log('🎯 开始滑动动画，从居中位置:', initialCenteredPosition.toFixed(2), 'px 到目标位置:', targetPosition, 'px')
-
-    // 使用双重 requestAnimationFrame 确保渲染完全稳定
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setTranslateX(targetPosition)
-      })
-    })
-  }, [initialCenteredPosition, targetPosition])
 
   // 阶段3：在新建面板退场完成后，任务列表滑回居中
   useEffect(() => {
     if (isExiting && newExitDone) {
-      console.log('🏠 新建面板退场完成，开始任务列表滑回居中:', initialCenteredPosition.toFixed(2), 'px')
-      setTranslateX(initialCenteredPosition)
+      setCurrentPosition(centeredPosition)
     }
-  }, [isExiting, newExitDone, initialCenteredPosition])
-
-  // 阶段3完成后：监听任务列表的 CSS 过渡结束事件，事件驱动地通知 Context 完成退出
-  useEffect(() => {
-    if (!(isExiting && newExitDone)) return
-    const el = taskListRef.current as unknown as HTMLElement | null
-    if (!el) return
-    const onTransitionEnd = (e: any) => {
-      const prop = e?.propertyName || ''
-      if (prop === 'margin-left') {
-        finalizeExit()
-      }
-    }
-    el.addEventListener('transitionend', onTransitionEnd)
-    return () => el.removeEventListener('transitionend', onTransitionEnd)
-  }, [isExiting, newExitDone, finalizeExit])
-
-
-  // 组件挂载后立即开始动画
-  useEffect(() => {
-    // 立即开始动画
-    setIsAnimating(false)
-  }, [])
-
+  }, [isExiting, newExitDone, centeredPosition])
 
   // 计算右侧两栏的水平定位：紧贴卡片右缘 + 16px
   // 移除了anchor计算逻辑，因为现在使用right定位
@@ -478,9 +234,11 @@ export default function ComposeMode({
     title: string
     description: string
     isAllDay: boolean
+    startDate: string
     startTime: string
+    endDate: string
+    endTime: string
     goalColor: TaskColor
-    isUrgent: boolean
   }) => {
     if (editingTask) {
       // 更新现有任务
@@ -495,7 +253,6 @@ export default function ComposeMode({
       awaitingCreatePrevIds.current = prevIds
       onSaveTask(formData)
       // 新建任务后，退出编辑模式并触发退场动画
-      console.log('📝 新建任务完成，开始退出编辑模式')
       exitComposeMode()
     }
   }
@@ -527,51 +284,71 @@ export default function ComposeMode({
         pointerEvents: isExiting && newExitDone ? 'none' : 'auto'
       }}
     >
-      {/* 第一栏：日程列表（1.5倍宽度） - 使用 variants 控制动画状态 */}
+      {/* 第一栏：日程列表（1.5倍宽度） - 使用 layoutId 共享布局动画 */}
       <motion.div
         ref={taskListRef}
-        className="bg-white lg:shadow-xl lg:rounded-lg"
+        layoutId="task-list-card"
+        className="bg-white shadow-xl rounded-lg flex flex-col"
         style={{
           width: taskListWidth,
-          marginLeft: `${translateX}px`, // 恢复滑动动效：从标准位置滑动到目标位置
-          marginTop: '8px', // 与主页面保持一致的顶部间距
-          transition: 'margin-left 0.18s cubic-bezier(0.4, 0, 1, 1)', // CSS 过渡：最快、干脆利落
-          // border: '2px solid red', // 临时边框已移除
-          overflow: 'hidden', // 确保内容不会溢出
-          boxSizing: 'border-box' // 确保边框包含在宽度内
+          maxWidth: '100%',
+          height: 'calc(100vh - 88px)', // NavBar 56px + padding 32px
+          boxSizing: 'border-box'
         }}
-
+        initial={false}
+        animate={{
+          marginLeft: currentPosition ?? centeredPosition
+        }}
+        transition={{
+          type: "tween",
+          duration: 0.18,
+          ease: [0.4, 0, 1, 1]
+        }}
+        onAnimationComplete={() => {
+          if (isExiting && newExitDone) {
+            finalizeExit()
+          }
+        }}
       >
-        <Header />
-        <div className="px-4">
-          <WeekdaySelector active={activeIdx} onChange={onDayChange} />
+        {/* 固定头部区域 */}
+        <div className="flex-shrink-0">
+          <Header />
+          <div className="px-4">
+            <WeekdaySelector active={activeIdx} onChange={onDayChange} />
+          </div>
+          <AllDayTasks
+            tasks={tasks.allDay}
+            onToggle={onToggleTask}
+            onTaskClick={handleTaskClick}
+            readOnly={true}
+          />
         </div>
-        <AllDayTasks
-          tasks={tasks.allDay}
-          onToggle={onToggleTask}
-          onTaskClick={handleTaskClick}
-          readOnly={true}
-        />
-        <TimedTasks
-          tasks={tasks.timed}
-          onToggle={onToggleTask}
-          onTaskClick={handleTaskClick}
-          readOnly={true}
-        />
+
+        {/* 可滚动的任务列表区域 */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <TimedTasks
+            tasks={tasks.timed}
+            onToggle={onToggleTask}
+            onTaskClick={handleTaskClick}
+            readOnly={true}
+          />
+        </div>
       </motion.div>
 
 
       {/* 第二栏：编辑面板 - 使用 Portal 固定到 viewport，避免随滚动/父级 transform 影响 */}
       {createPortal(
         <AnimatePresence onExitComplete={() => setEditExitDone(true)}>
-          {editingTask && (
+          {showNewPanel && (
             <motion.div
               key="edit-panel"
-              className="fixed top-[69px] z-30 bg-white border-l border-t-2 border-b-2 border-white/30 shadow-xl overflow-y-auto rounded-l-lg"
+              className="fixed top-[69px] z-30 bg-white border-l border-t-2 border-b-2 border-white/30 shadow-xl overflow-y-auto rounded-l-lg [&::-webkit-scrollbar]:hidden"
               style={{
-                right: `${editPanelRight}px`, // 固定布局：在新建面板左侧16px处
+                right: `${editPanelRight}px`,
                 width: `${editPanelWidth}px`,
-                height: 'calc(100vh - 79px)'
+                height: 'calc(100vh - 79px)',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
               }}
               initial={{ x: "100%", opacity: 0, scale: 0.95 }}
               animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -588,36 +365,51 @@ export default function ComposeMode({
               }}
               transition={{
                 type: "spring",
-                stiffness: 200,  // 降低弹性，让滑入更平滑
-                damping: 25,     // 降低阻尼，增加弹性
+                stiffness: 200,
+                damping: 25,
                 mass: 1,
                 restDelta: 0.01,
                 restSpeed: 0.01
               }}
-              onAnimationStart={() => console.log('🎬 编辑面板动画开始')}
-              onAnimationComplete={() => console.log('✅ 编辑面板动画完成')}
             >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0.1,
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 40
-                }}
-              >
-                <CreateScheduleForm
-                  onClose={clearEditingTask}
-                  onSave={handleSave}
-                  onDelete={onDeleteTask}
-                  editingTask={editingTask}
-                  title="编辑日程"
-                  showCloseButton={false}
-                  showDeleteButton={true}
-                  footerRef={editFooterRef}
-                />
-              </motion.div>
+              {editingTask ? (
+                <motion.div
+                  key="edit-form"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.1,
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 40
+                  }}
+                >
+                  <CreateScheduleForm
+                    onClose={clearEditingTask}
+                    onSave={handleSave}
+                    onDelete={onDeleteTask}
+                    editingTask={editingTask}
+                    title="编辑日程"
+                    showCloseButton={false}
+                    showDeleteButton={true}
+                    footerRef={editFooterRef}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="edit-placeholder"
+                  className="flex flex-col items-center justify-center h-full text-gray-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <p className="text-lg font-medium">点击左侧列表以开始</p>
+                  <p className="text-sm mt-1">选择一个日程进行编辑</p>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>,
@@ -630,7 +422,7 @@ export default function ComposeMode({
           {showNewPanel && (
             <motion.div
             key="new-schedule-panel"
-            className="fixed top-[69px] z-30 bg-white border-l border-t-2 border-b-2 border-white/30 shadow-lg overflow-y-auto rounded-l-lg"
+            className="fixed top-[69px] z-30 bg-white border-l border-t-2 border-b-2 border-white/30 shadow-lg overflow-y-auto rounded-l-lg [&::-webkit-scrollbar]:hidden"
           initial={{ y: -600, opacity: 0, scale: 0.7, rotateX: -15 }}
           animate={{
             y: 0,
@@ -652,26 +444,24 @@ export default function ComposeMode({
           }}
           transition={{
             type: "spring",
-            stiffness: 150,  // 更低的弹性，更慢的动画
-            damping: 15,     // 更低的阻尼，更多弹跳
-            mass: 1.2,       // 更重的质量，更有重量感
-            delay: 0.3,      // 减少延迟，更快响应
+            stiffness: 150,
+            damping: 15,
+            mass: 1.2,
+            delay: 0.3,
             restDelta: 0.01,
             restSpeed: 0.01
           }}
-          onAnimationStart={() => console.log('🎬 新建面板动画开始')}
           onAnimationComplete={() => {
-            // 直接在新建面板退场动画结束的同一刻，启动任务列表滑回，做到“零等待”
             if (isExiting && !showNewPanel && !newExitDone) {
-              setTranslateX(initialCenteredPosition)
               setNewExitDone(true)
             }
-            console.log('✅ 新建面板动画完成')
           }}
           style={{
-            right: `${newPanelRight}px`, // 固定布局：距离右边缘10px
+            right: `${newPanelRight}px`,
             width: `${newPanelWidth}px`,
             height: 'calc(100vh - 79px)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
           }}
         >
           <motion.div
@@ -726,3 +516,4 @@ export default function ComposeMode({
     </div>
   )
 }
+

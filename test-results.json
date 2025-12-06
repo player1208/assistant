@@ -1,0 +1,1556 @@
+[
+  {
+    "id": 1,
+    "category": "时间边界",
+    "input": "这个月底前交论文，每天晚上10点提醒",
+    "expect": "创建deadline，截止日期应为本月最后一天23:59",
+    "actual": "📝 已添加任务：交论文。将在每天晚上 10 点提醒您。",
+    "duration": 55404,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947147628,
+        "feedbackSentAt": 1764947147629,
+        "ai1StartTime": 1764947147634,
+        "ai1EndTime": 1764947199073,
+        "ai2StartTime": 1764947199075,
+        "ai2EndTime": 1764947202838,
+        "replySentAt": 1764947202842,
+        "totalTime": 55214
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_deadline",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_deadline",
+            "payload": {
+              "title": "交论文",
+              "raw_time_str": "2025-12-31",
+              "raw_notify_str": "每天晚上10点"
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_deadline",
+              "args": {
+                "title": "交论文",
+                "due_time": "2025-12-31 23:59",
+                "daily_remind_time": "22:00"
+              }
+            }
+          ],
+          "final_report": "📝 已添加任务：交论文。将在每天晚上 10 点提醒您。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_deadline",
+            "args": {
+              "title": "交论文",
+              "due_time": "2025-12-31 23:59",
+              "daily_remind_time": "22:00"
+            }
+          }
+        ],
+        "finalReport": "📝 已添加任务：交论文。将在每天晚上 10 点提醒您。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 2,
+    "category": "时间边界",
+    "input": "15号前完成设计稿，每天早上8点催我",
+    "expect": "如果今天>15号则下月15日23:59，否则本月15日23:59",
+    "actual": "🎉 已添加任务：完成设计稿。将在每天早上 08:00 提醒您。",
+    "duration": 65659,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947202873,
+        "feedbackSentAt": 1764947202873,
+        "ai1StartTime": 1764947202874,
+        "ai1EndTime": 1764947259744,
+        "ai2StartTime": 1764947259745,
+        "ai2EndTime": 1764947268522,
+        "replySentAt": 1764947268522,
+        "totalTime": 65649
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_deadline",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_deadline",
+            "payload": {
+              "title": "完成设计稿",
+              "raw_time_str": "2025-12-15",
+              "raw_notify_str": "每天早上8点"
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_deadline",
+              "args": {
+                "title": "完成设计稿",
+                "due_time": "2025-12-15 23:59",
+                "daily_remind_time": "08:00"
+              }
+            }
+          ],
+          "final_report": "🎉 已添加任务：完成设计稿。将在每天早上 08:00 提醒您。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_deadline",
+            "args": {
+              "title": "完成设计稿",
+              "due_time": "2025-12-15 23:59",
+              "daily_remind_time": "08:00"
+            }
+          }
+        ],
+        "finalReport": "🎉 已添加任务：完成设计稿。将在每天早上 08:00 提醒您。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 3,
+    "category": "跨年推断",
+    "input": "1月3号下午茶聚会，提前半小时提醒",
+    "expect": "应推断为2026-01-03（因为2025年1月已过）",
+    "actual": "操作已完成。",
+    "duration": 11953,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947268531,
+        "feedbackSentAt": 1764947268531,
+        "ai1StartTime": 1764947268532,
+        "ai1EndTime": 1764947276987,
+        "ai2StartTime": 1764947276988,
+        "ai2EndTime": 1764947280479,
+        "replySentAt": 1764947280480,
+        "totalTime": 11949
+      },
+      "replyType": "full",
+      "actionSummary": "已创建日程「下午茶聚会」，时间：2026-01-03",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "下午茶聚会",
+              "raw_time_str": "2026-01-03",
+              "raw_notify_str": "提前半小时",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 4,
+    "category": "跨年推断",
+    "input": "元旦上午10点参加升旗仪式，当天早上7点提醒",
+    "expect": "应推断为2026-01-01",
+    "actual": "操作已完成。",
+    "duration": 27964,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947280484,
+        "feedbackSentAt": 1764947280484,
+        "ai1StartTime": 1764947280484,
+        "ai1EndTime": 1764947288248,
+        "ai2StartTime": 1764947288248,
+        "ai2EndTime": 1764947308443,
+        "replySentAt": 1764947308444,
+        "totalTime": 27960
+      },
+      "replyType": "full",
+      "actionSummary": "已创建日程「参加升旗仪式」，时间：2026-01-01 上午10点",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "参加升旗仪式",
+              "raw_time_str": "2026-01-01 上午10点",
+              "raw_notify_str": "当天早上7点",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 5,
+    "category": "跨年推断",
+    "input": "农历大年三十吃年夜饭，不用提醒",
+    "expect": "应查找2026年春节除夕日期",
+    "actual": "操作已完成。",
+    "duration": 13385,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947308449,
+        "feedbackSentAt": 1764947308449,
+        "ai1StartTime": 1764947308450,
+        "ai1EndTime": 1764947315831,
+        "ai2StartTime": 1764947315832,
+        "ai2EndTime": 1764947321828,
+        "replySentAt": 1764947321829,
+        "totalTime": 13380
+      },
+      "replyType": "full",
+      "actionSummary": "已创建日程「吃年夜饭」，时间：2026年大年三十",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "吃年夜饭",
+              "raw_time_str": "2026年大年三十",
+              "raw_notify_str": "不用提醒",
+              "is_all_day": true
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 6,
+    "category": "节日",
+    "input": "端午节前一天去超市买粽子，每天下午3点提醒",
+    "expect": "应先查端午日期，再减1天，创建deadline",
+    "actual": "🛒 已添加任务：去超市买粽子。将在2026年端午节前一天（6月2日）截止，并每天下午 3 点提醒您。",
+    "duration": 33106,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947321839,
+        "feedbackSentAt": 1764947321839,
+        "ai1StartTime": 1764947321842,
+        "ai1EndTime": 1764947349102,
+        "ai2StartTime": 1764947349104,
+        "ai2EndTime": 1764947354926,
+        "replySentAt": 1764947354929,
+        "totalTime": 33090
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: find_holiday, add_deadline",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_deadline",
+            "payload": {
+              "title": "去超市买粽子",
+              "raw_time_str": "2026年端午节前一天",
+              "raw_notify_str": "每天下午3点"
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "find_holiday",
+              "args": {
+                "name": "端午节",
+                "year": 2026
+              }
+            },
+            {
+              "tool": "add_deadline",
+              "args": {
+                "title": "去超市买粽子",
+                "due_time": "2026-06-02 23:59",
+                "daily_remind_time": "15:00"
+              }
+            }
+          ],
+          "final_report": "🛒 已添加任务：去超市买粽子。将在2026年端午节前一天（6月2日）截止，并每天下午 3 点提醒您。"
+        },
+        "toolCalls": [
+          {
+            "tool": "find_holiday",
+            "args": {
+              "name": "端午节",
+              "year": 2026
+            }
+          },
+          {
+            "tool": "add_deadline",
+            "args": {
+              "title": "去超市买粽子",
+              "due_time": "2026-06-02 23:59",
+              "daily_remind_time": "15:00"
+            }
+          }
+        ],
+        "finalReport": "🛒 已添加任务：去超市买粽子。将在2026年端午节前一天（6月2日）截止，并每天下午 3 点提醒您。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 7,
+    "category": "节日",
+    "input": "中秋节当天和家人聚餐，当天中午12点提醒",
+    "expect": "应查找2025或2026中秋日期创建全天日程",
+    "actual": "🎉 已为您安排：2026年中秋节当天中午 12:00 和家人聚餐，不设置提醒。",
+    "duration": 13240,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947354957,
+        "feedbackSentAt": 1764947354957,
+        "ai1StartTime": 1764947354959,
+        "ai1EndTime": 1764947362907,
+        "ai2StartTime": 1764947362908,
+        "ai2EndTime": 1764947368180,
+        "replySentAt": 1764947368181,
+        "totalTime": 13224
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: find_holiday, add_event",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "和家人聚餐",
+              "raw_time_str": "2026年中秋节",
+              "raw_notify_str": "当天中午12点",
+              "is_all_day": true
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "find_holiday",
+              "args": {
+                "name": "中秋节",
+                "year": 2026
+              }
+            },
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "和家人聚餐",
+                "start_time": "2026-09-29 12:00",
+                "is_all_day": true,
+                "notify_offset": 0,
+                "notify_time": "12:00"
+              }
+            }
+          ],
+          "final_report": "🎉 已为您安排：2026年中秋节当天中午 12:00 和家人聚餐，不设置提醒。"
+        },
+        "toolCalls": [
+          {
+            "tool": "find_holiday",
+            "args": {
+              "name": "中秋节",
+              "year": 2026
+            }
+          },
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "和家人聚餐",
+              "start_time": "2026-09-29 12:00",
+              "is_all_day": true,
+              "notify_offset": 0,
+              "notify_time": "12:00"
+            }
+          }
+        ],
+        "finalReport": "🎉 已为您安排：2026年中秋节当天中午 12:00 和家人聚餐，不设置提醒。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 8,
+    "category": "节日",
+    "input": "清明节扫墓，当天早上8点提醒",
+    "expect": "应查找清明日期（通常4月4-6日）",
+    "actual": "操作可能已完成，但解析响应时出现问题。",
+    "duration": 19833,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947368196,
+        "feedbackSentAt": 1764947368196,
+        "ai1StartTime": 1764947368198,
+        "ai1EndTime": 1764947382087,
+        "ai2StartTime": 1764947382087,
+        "ai2EndTime": 1764947388014,
+        "replySentAt": 1764947388016,
+        "totalTime": 19820
+      },
+      "replyType": "full",
+      "actionSummary": "已创建日程「清明节扫墓」，时间：2026年清明节",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "清明节扫墓",
+              "raw_time_str": "2026年清明节",
+              "raw_notify_str": "当天早上8点",
+              "is_all_day": true
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "操作可能已完成，但解析响应时出现问题。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 9,
+    "category": "节日",
+    "input": "国庆第三天自驾游出发，提前一天提醒",
+    "expect": "应计算10月3日",
+    "actual": "抱歉，我没有理解你的意思。你可以说\"明天上午十点有会议\"来创建日程，或说\"明天有什么事\"来查询日程。",
+    "duration": 9850,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947388033,
+        "feedbackSentAt": 1764947388034,
+        "ai1StartTime": 1764947388037,
+        "ai1EndTime": 1764947397861,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947397863,
+        "totalTime": 9830
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "抱歉，我没有理解你的意思。你可以说\"明天上午十点有会议\"来创建日程，或说\"明天有什么事\"来查询日程。",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 10,
+    "category": "节气",
+    "input": "冬至那天去吃饺子，当天中午提醒",
+    "expect": "应查找冬至日期（12月21-23日左右）",
+    "actual": "🍽️ 已创建全天日程：2025-12-22 吃饺子，当天中午提醒您。",
+    "duration": 43820,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947397882,
+        "feedbackSentAt": 1764947397883,
+        "ai1StartTime": 1764947397884,
+        "ai1EndTime": 1764947432049,
+        "ai2StartTime": 1764947432049,
+        "ai2EndTime": 1764947441694,
+        "replySentAt": 1764947441695,
+        "totalTime": 43813
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_event",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "吃饺子",
+              "raw_time_str": "2025-12-22",
+              "raw_notify_str": "当天中午",
+              "is_all_day": true
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "吃饺子",
+                "start_time": "2025-12-22 12:00",
+                "is_all_day": true,
+                "notify_offset": 0,
+                "notify_time": "12:00"
+              }
+            }
+          ],
+          "final_report": "🍽️ 已创建全天日程：2025-12-22 吃饺子，当天中午提醒您。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "吃饺子",
+              "start_time": "2025-12-22 12:00",
+              "is_all_day": true,
+              "notify_offset": 0,
+              "notify_time": "12:00"
+            }
+          }
+        ],
+        "finalReport": "🍽️ 已创建全天日程：2025-12-22 吃饺子，当天中午提醒您。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 11,
+    "category": "节气",
+    "input": "立春后开始减肥计划，每天早上6点提醒",
+    "expect": "应查找立春日期",
+    "actual": "抱歉，我没有理解你的意思。你可以说\"明天上午十点有会议\"来创建日程，或说\"明天有什么事\"来查询日程。",
+    "duration": 5578,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947441699,
+        "feedbackSentAt": 1764947441699,
+        "ai1StartTime": 1764947441700,
+        "ai1EndTime": 1764947447271,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947447272,
+        "totalTime": 5573
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "抱歉，我没有理解你的意思。你可以说\"明天上午十点有会议\"来创建日程，或说\"明天有什么事\"来查询日程。",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 12,
+    "category": "相对时间",
+    "input": "大后天下午5点健身房私教课，提前20分钟提醒",
+    "expect": "应计算今天+3天",
+    "actual": "操作已完成。",
+    "duration": 25508,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947447278,
+        "feedbackSentAt": 1764947447278,
+        "ai1StartTime": 1764947447278,
+        "ai1EndTime": 1764947469698,
+        "ai2StartTime": 1764947469698,
+        "ai2EndTime": 1764947472781,
+        "replySentAt": 1764947472781,
+        "totalTime": 25503
+      },
+      "replyType": "full",
+      "actionSummary": "已创建日程「健身房私教课」，时间：2025-12-08 下午5点",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "健身房私教课",
+              "raw_time_str": "2025-12-08 下午5点",
+              "raw_notify_str": "提前20分钟",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 13,
+    "category": "相对时间",
+    "input": "下下周一交季度报告，每天上午9点提醒",
+    "expect": "应计算下下周一日期",
+    "actual": "操作已完成。",
+    "duration": 16397,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947472787,
+        "feedbackSentAt": 1764947472787,
+        "ai1StartTime": 1764947472788,
+        "ai1EndTime": 1764947486267,
+        "ai2StartTime": 1764947486267,
+        "ai2EndTime": 1764947489181,
+        "replySentAt": 1764947489181,
+        "totalTime": 16394
+      },
+      "replyType": "full",
+      "actionSummary": "已创建任务「交季度报告」，截止：下下周一",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_deadline",
+            "payload": {
+              "title": "交季度报告",
+              "raw_time_str": "下下周一",
+              "raw_notify_str": "每天上午9点"
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 14,
+    "category": "相对时间",
+    "input": "这周日晚上9点看比赛，不用提醒",
+    "expect": "应计算本周日日期",
+    "actual": "👀 已为您安排：2025-12-07 晚上 21:00 看比赛，不设置提醒。",
+    "duration": 12320,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947489186,
+        "feedbackSentAt": 1764947489186,
+        "ai1StartTime": 1764947489187,
+        "ai1EndTime": 1764947498113,
+        "ai2StartTime": 1764947498114,
+        "ai2EndTime": 1764947501500,
+        "replySentAt": 1764947501501,
+        "totalTime": 12315
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_event",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "看比赛",
+              "raw_time_str": "2025-12-07 晚上9点",
+              "raw_notify_str": "不用提醒",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "看比赛",
+                "start_time": "2025-12-07 21:00",
+                "is_all_day": false,
+                "notify_offset": -1
+              }
+            }
+          ],
+          "final_report": "👀 已为您安排：2025-12-07 晚上 21:00 看比赛，不设置提醒。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "看比赛",
+              "start_time": "2025-12-07 21:00",
+              "is_all_day": false,
+              "notify_offset": -1
+            }
+          }
+        ],
+        "finalReport": "👀 已为您安排：2025-12-07 晚上 21:00 看比赛，不设置提醒。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 15,
+    "category": "相对时间",
+    "input": "下个月15号发工资，当天早上8点提醒",
+    "expect": "应计算下个月15日",
+    "actual": "📅 已创建全天日程：2026-01-15 发工资，当天早上 08:00 提醒您。",
+    "duration": 9986,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947501505,
+        "feedbackSentAt": 1764947501505,
+        "ai1StartTime": 1764947501506,
+        "ai1EndTime": 1764947508731,
+        "ai2StartTime": 1764947508732,
+        "ai2EndTime": 1764947511487,
+        "replySentAt": 1764947511487,
+        "totalTime": 9982
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_event",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "发工资",
+              "raw_time_str": "2026-01-15",
+              "raw_notify_str": "当天早上8点",
+              "is_all_day": true
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "发工资",
+                "start_time": "2026-01-15 00:00",
+                "is_all_day": true,
+                "notify_offset": 0,
+                "notify_time": "08:00"
+              }
+            }
+          ],
+          "final_report": "📅 已创建全天日程：2026-01-15 发工资，当天早上 08:00 提醒您。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "发工资",
+              "start_time": "2026-01-15 00:00",
+              "is_all_day": true,
+              "notify_offset": 0,
+              "notify_time": "08:00"
+            }
+          }
+        ],
+        "finalReport": "📅 已创建全天日程：2026-01-15 发工资，当天早上 08:00 提醒您。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 16,
+    "category": "模糊时间",
+    "input": "明天傍晚去接孩子放学，提前10分钟",
+    "expect": "傍晚应解析为17:00-18:00左右",
+    "actual": "✅ 已为您安排：明天傍晚 17:00 接孩子放学，并设置了提前 10 分钟提醒。",
+    "duration": 8787,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947511490,
+        "feedbackSentAt": 1764947511490,
+        "ai1StartTime": 1764947511490,
+        "ai1EndTime": 1764947517867,
+        "ai2StartTime": 1764947517867,
+        "ai2EndTime": 1764947520274,
+        "replySentAt": 1764947520274,
+        "totalTime": 8784
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_event",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "接孩子放学",
+              "raw_time_str": "明天傍晚",
+              "raw_notify_str": "提前10分钟",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "接孩子放学",
+                "start_time": "2025-12-06 17:00",
+                "is_all_day": false,
+                "notify_offset": 10
+              }
+            }
+          ],
+          "final_report": "✅ 已为您安排：明天傍晚 17:00 接孩子放学，并设置了提前 10 分钟提醒。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "接孩子放学",
+              "start_time": "2025-12-06 17:00",
+              "is_all_day": false,
+              "notify_offset": 10
+            }
+          }
+        ],
+        "finalReport": "✅ 已为您安排：明天傍晚 17:00 接孩子放学，并设置了提前 10 分钟提醒。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 17,
+    "category": "模糊时间",
+    "input": "后天凌晨的航班，提前3小时提醒",
+    "expect": "凌晨应解析为00:00-05:00",
+    "actual": "操作已完成。",
+    "duration": 28836,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947520277,
+        "feedbackSentAt": 1764947520277,
+        "ai1StartTime": 1764947520277,
+        "ai1EndTime": 1764947545147,
+        "ai2StartTime": 1764947545147,
+        "ai2EndTime": 1764947549111,
+        "replySentAt": 1764947549111,
+        "totalTime": 28834
+      },
+      "replyType": "full",
+      "actionSummary": "已创建日程「航班」，时间：后天凌晨",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "航班",
+              "raw_time_str": "后天凌晨",
+              "raw_notify_str": "提前3小时",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 18,
+    "category": "模糊时间",
+    "input": "下周末有场婚礼，当天早上9点提醒",
+    "expect": "周末应理解为周六或周日，可能需追问",
+    "actual": "💍 已创建全天日程：2025-12-13 婚礼，当天早上 9 点提醒您。",
+    "duration": 24428,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947549116,
+        "feedbackSentAt": 1764947549116,
+        "ai1StartTime": 1764947549117,
+        "ai1EndTime": 1764947570697,
+        "ai2StartTime": 1764947570698,
+        "ai2EndTime": 1764947573537,
+        "replySentAt": 1764947573538,
+        "totalTime": 24422
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: add_event",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "create_event",
+            "payload": {
+              "title": "婚礼",
+              "raw_time_str": "2025-12-13",
+              "raw_notify_str": "当天早上9点",
+              "is_all_day": true
+            }
+          }
+        },
+        "intent": "create_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "婚礼",
+                "start_time": "2025-12-13 00:00",
+                "is_all_day": true,
+                "notify_offset": 0,
+                "notify_time": "09:00"
+              }
+            }
+          ],
+          "final_report": "💍 已创建全天日程：2025-12-13 婚礼，当天早上 9 点提醒您。"
+        },
+        "toolCalls": [
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "婚礼",
+              "start_time": "2025-12-13 00:00",
+              "is_all_day": true,
+              "notify_offset": 0,
+              "notify_time": "09:00"
+            }
+          }
+        ],
+        "finalReport": "💍 已创建全天日程：2025-12-13 婚礼，当天早上 9 点提醒您。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 19,
+    "category": "Slot Filling",
+    "input": "明天开会",
+    "expect": "应追问具体时间和是否需要提醒",
+    "actual": "收到，明天开会。💡 **请问具体的会议时间是几点？**（例如：'上午10点'或'下午3点'）",
+    "duration": 2547,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947573543,
+        "feedbackSentAt": 1764947573543,
+        "ai1StartTime": 1764947573543,
+        "ai1EndTime": 1764947576085,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947576085,
+        "totalTime": 2542
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "收到，明天开会。💡 **请问具体的会议时间是几点？**（例如：'上午10点'或'下午3点'）",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 20,
+    "category": "Slot Filling",
+    "input": "下周三下午2点开会",
+    "expect": "应追问是否需要提醒",
+    "actual": "收到，下周三下午2点开会。💡 **请问需要提前多久提醒您？**（或者回复'不提醒'）",
+    "duration": 23758,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947576089,
+        "feedbackSentAt": 1764947576089,
+        "ai1StartTime": 1764947576090,
+        "ai1EndTime": 1764947599843,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947599844,
+        "totalTime": 23755
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "收到，下周三下午2点开会。💡 **请问需要提前多久提醒您？**（或者回复'不提醒'）",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 21,
+    "category": "Slot Filling",
+    "input": "月底前完成报告",
+    "expect": "应追问每日提醒时间",
+    "actual": "好的，任务'完成报告'截止到月底。⏳ 为了防止拖延，**请设置一个每日提醒时间**（例如：'每天晚上8点提醒我'）？",
+    "duration": 32622,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947599847,
+        "feedbackSentAt": 1764947599847,
+        "ai1StartTime": 1764947599847,
+        "ai1EndTime": 1764947632463,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947632464,
+        "totalTime": 32617
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "好的，任务'完成报告'截止到月底。⏳ 为了防止拖延，**请设置一个每日提醒时间**（例如：'每天晚上8点提醒我'）？",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 22,
+    "category": "Slot Filling",
+    "input": "记一下我生日是5月20号",
+    "expect": "全天日程，应追问是否需要提醒",
+    "actual": "收到，生日是5月20日。💡 **请问需要设置提醒吗？**（比如'当天早上9点'或'不提醒'？）",
+    "duration": 24771,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947632470,
+        "feedbackSentAt": 1764947632470,
+        "ai1StartTime": 1764947632470,
+        "ai1EndTime": 1764947657237,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947657238,
+        "totalTime": 24768
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "收到，生日是5月20日。💡 **请问需要设置提醒吗？**（比如'当天早上9点'或'不提醒'？）",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 23,
+    "category": "时间回溯",
+    "input": "帮我记录一下昨天的会议纪要",
+    "expect": "应拒绝并提示无法创建过去的时间",
+    "actual": "抱歉，我无法创建已经过去的时间（昨天）。只能创建未来的日程哦。",
+    "duration": 2247,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947657240,
+        "feedbackSentAt": 1764947657240,
+        "ai1StartTime": 1764947657240,
+        "ai1EndTime": 1764947659483,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947659484,
+        "totalTime": 2244
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "抱歉，我无法创建已经过去的时间（昨天）。只能创建未来的日程哦。",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 24,
+    "category": "时间回溯",
+    "input": "今天早上8点的会议帮我记录一下",
+    "expect": "如果现在已过8点，应拒绝",
+    "actual": "收到，今天早上8点的会议。💡 **请问需要提前多久提醒您？**（或者回复'不提醒'）",
+    "duration": 14410,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947659489,
+        "feedbackSentAt": 1764947659489,
+        "ai1StartTime": 1764947659489,
+        "ai1EndTime": 1764947673893,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947673893,
+        "totalTime": 14404
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "收到，今天早上8点的会议。💡 **请问需要提前多久提醒您？**（或者回复'不提醒'）",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 25,
+    "category": "意图防火墙",
+    "input": "帮我写一首关于春天的诗",
+    "expect": "应礼貌拒绝并引导使用核心功能",
+    "actual": "抱歉，我是日程管理助手，暂不支持创作诗歌哦 🙏\n\n我可以帮你：\n• 创建日程（如：'明天下午开会'）\n• 设置任务截止日（如：'周五前交报告'）\n• 查询日程（如：'今天有什么安排'）",
+    "duration": 3471,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947673899,
+        "feedbackSentAt": 1764947673899,
+        "ai1StartTime": 1764947673900,
+        "ai1EndTime": 1764947677365,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947677365,
+        "totalTime": 3466
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "抱歉，我是日程管理助手，暂不支持创作诗歌哦 🙏\n\n我可以帮你：\n• 创建日程（如：'明天下午开会'）\n• 设置任务截止日（如：'周五前交报告'）\n• 查询日程（如：'今天有什么安排'）",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 26,
+    "category": "意图防火墙",
+    "input": "今天股票涨了吗",
+    "expect": "应礼貌拒绝并引导使用核心功能",
+    "actual": "抱歉，我是日程管理助手，暂不支持查询股票信息哦 🙏\n\n我可以帮你：\n• 创建日程（如：'明天下午开会'）\n• 设置任务截止日（如：'周五前交报告'）\n• 查询日程（如：'今天有什么安排'）",
+    "duration": 34423,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947677370,
+        "feedbackSentAt": 1764947677370,
+        "ai1StartTime": 1764947677370,
+        "ai1EndTime": 1764947711788,
+        "ai2StartTime": 0,
+        "ai2EndTime": 0,
+        "replySentAt": 1764947711789,
+        "totalTime": 34419
+      },
+      "replyType": "quick",
+      "actionSummary": "直接回复",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": "抱歉，我是日程管理助手，暂不支持查询股票信息哦 🙏\n\n我可以帮你：\n• 创建日程（如：'明天下午开会'）\n• 设置任务截止日（如：'周五前交报告'）\n• 查询日程（如：'今天有什么安排'）",
+          "agent_instruction": null
+        },
+        "intent": "unknown",
+        "needsAI2": false
+      },
+      "ai2Output": null
+    }
+  },
+  {
+    "id": 27,
+    "category": "查询",
+    "input": "春节那天有什么安排",
+    "expect": "应查询春节当天的日程",
+    "actual": "🎉 2026年春节是2月15日。2026年2月10日这天您没有安排任何事情。",
+    "duration": 10031,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947711794,
+        "feedbackSentAt": 1764947711794,
+        "ai1StartTime": 1764947711794,
+        "ai1EndTime": 1764947719540,
+        "ai2StartTime": 1764947719541,
+        "ai2EndTime": 1764947721821,
+        "replySentAt": 1764947721822,
+        "totalTime": 10028
+      },
+      "replyType": "full",
+      "actionSummary": "已查询2026年春节的日程",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "query_agenda",
+            "payload": {
+              "title": "",
+              "raw_time_str": "2026年春节",
+              "raw_notify_str": "",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "query_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "🎉 2026年春节是2月15日。2026年2月10日这天您没有安排任何事情。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 28,
+    "category": "查询",
+    "input": "下周二忙不忙",
+    "expect": "应查询下周二的日程",
+    "actual": "📅 您下周二没有其他安排。已为您安排：查询日程，将在早上 09:00 提醒您，并设置了每天早上 09:00 的每日提醒。同时，已开启早晚安提醒功能。",
+    "duration": 41384,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947721824,
+        "feedbackSentAt": 1764947721824,
+        "ai1StartTime": 1764947721824,
+        "ai1EndTime": 1764947749207,
+        "ai2StartTime": 1764947749208,
+        "ai2EndTime": 1764947763204,
+        "replySentAt": 1764947763204,
+        "totalTime": 41380
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: get_weekday, get_agenda, add_event, add_deadline, set_reminder_interval, toggle_daily_brief",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "query_agenda",
+            "payload": {
+              "title": "",
+              "raw_time_str": "下周二",
+              "raw_notify_str": "",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "query_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "get_weekday",
+              "args": {
+                "week": "next",
+                "day": "tuesday"
+              }
+            },
+            {
+              "tool": "get_agenda",
+              "args": {
+                "query_date": "2025-12-11"
+              }
+            },
+            {
+              "tool": "add_event",
+              "args": {
+                "title": "查询日程",
+                "start_time": "2025-12-11 09:00",
+                "is_all_day": false,
+                "notify_offset": -1,
+                "notify_time": "09:00"
+              }
+            },
+            {
+              "tool": "add_deadline",
+              "args": {
+                "title": "查询日程",
+                "due_time": "2025-12-11 23:59",
+                "daily_remind_time": "09:00"
+              }
+            },
+            {
+              "tool": "set_reminder_interval",
+              "args": {
+                "interval_minutes": 120
+              }
+            },
+            {
+              "tool": "toggle_daily_brief",
+              "args": {
+                "target": "all",
+                "status": "on"
+              }
+            }
+          ],
+          "final_report": "📅 您下周二没有其他安排。已为您安排：查询日程，将在早上 09:00 提醒您，并设置了每天早上 09:00 的每日提醒。同时，已开启早晚安提醒功能。"
+        },
+        "toolCalls": [
+          {
+            "tool": "get_weekday",
+            "args": {
+              "week": "next",
+              "day": "tuesday"
+            }
+          },
+          {
+            "tool": "get_agenda",
+            "args": {
+              "query_date": "2025-12-11"
+            }
+          },
+          {
+            "tool": "add_event",
+            "args": {
+              "title": "查询日程",
+              "start_time": "2025-12-11 09:00",
+              "is_all_day": false,
+              "notify_offset": -1,
+              "notify_time": "09:00"
+            }
+          },
+          {
+            "tool": "add_deadline",
+            "args": {
+              "title": "查询日程",
+              "due_time": "2025-12-11 23:59",
+              "daily_remind_time": "09:00"
+            }
+          },
+          {
+            "tool": "set_reminder_interval",
+            "args": {
+              "interval_minutes": 120
+            }
+          },
+          {
+            "tool": "toggle_daily_brief",
+            "args": {
+              "target": "all",
+              "status": "on"
+            }
+          }
+        ],
+        "finalReport": "📅 您下周二没有其他安排。已为您安排：查询日程，将在早上 09:00 提醒您，并设置了每天早上 09:00 的每日提醒。同时，已开启早晚安提醒功能。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 29,
+    "category": "特殊功能",
+    "input": "把今天的任务每隔30分钟提醒我一次",
+    "expect": "应设置提醒间隔为30分钟",
+    "actual": "👌 没问题，今天剩下的任务每 30 分钟提醒一次。",
+    "duration": 10522,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947763210,
+        "feedbackSentAt": 1764947763210,
+        "ai1StartTime": 1764947763211,
+        "ai1EndTime": 1764947771171,
+        "ai2StartTime": 1764947771171,
+        "ai2EndTime": 1764947773729,
+        "replySentAt": 1764947773729,
+        "totalTime": 10519
+      },
+      "replyType": "full",
+      "actionSummary": "执行了工具: set_reminder_interval",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "set_reminder_interval",
+            "payload": {
+              "title": "",
+              "raw_time_str": "",
+              "raw_notify_str": "30分钟",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "update_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "rawOutput": {
+          "tool_calls": [
+            {
+              "tool": "set_reminder_interval",
+              "args": {
+                "interval_minutes": 30
+              }
+            }
+          ],
+          "final_report": "👌 没问题，今天剩下的任务每 30 分钟提醒一次。"
+        },
+        "toolCalls": [
+          {
+            "tool": "set_reminder_interval",
+            "args": {
+              "interval_minutes": 30
+            }
+          }
+        ],
+        "finalReport": "👌 没问题，今天剩下的任务每 30 分钟提醒一次。",
+        "success": true
+      }
+    }
+  },
+  {
+    "id": 30,
+    "category": "特殊功能",
+    "input": "关掉早安提醒",
+    "expect": "应切换早安推送为关闭",
+    "actual": "airstrikes 已关闭早安提醒。如果您需要开启或更改提醒时间，请告诉我哦！",
+    "duration": 9259,
+    "success": true,
+    "debug": {
+      "timeline": {
+        "receivedAt": 1764947773740,
+        "feedbackSentAt": 1764947773740,
+        "ai1StartTime": 1764947773740,
+        "ai1EndTime": 1764947780112,
+        "ai2StartTime": 1764947780112,
+        "ai2EndTime": 1764947782996,
+        "replySentAt": 1764947782996,
+        "totalTime": 9256
+      },
+      "replyType": "full",
+      "actionSummary": "已更新通知设置",
+      "ai1Output": {
+        "rawOutput": {
+          "reply_to_user": null,
+          "agent_instruction": {
+            "intent": "toggle_notification",
+            "payload": {
+              "title": "早安提醒",
+              "raw_time_str": "",
+              "raw_notify_str": "关闭",
+              "is_all_day": false
+            }
+          }
+        },
+        "intent": "update_task",
+        "needsAI2": true
+      },
+      "ai2Output": {
+        "toolCalls": [],
+        "finalReport": "airstrikes 已关闭早安提醒。如果您需要开启或更改提醒时间，请告诉我哦！",
+        "success": true
+      }
+    }
+  }
+]

@@ -22,11 +22,7 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   const enterComposeMode = () => {
-    console.log('🚀 开始进入编辑模式...')
     setIsTransitioning(true)
-
-    // 立即切换到编辑模式，不需要延迟
-    console.log('⚡ 设置 isComposeMode = true')
     setIsComposeMode(true)
     setEditingTask(null) // 默认为新建模式
 
@@ -36,24 +32,20 @@ export function ComposeModeProvider({ children }: { children: ReactNode }) {
 
   // 由动画完成事件触发的“退出完成”回调（事件驱动）
   const finalizeExit = () => {
-    console.log('🧹 finalizeExit: 动画已完成，重置 isTransitioning/isExiting，并确保 isComposeMode=false')
     setIsTransitioning(false)
     setIsExiting(false)
     setIsComposeMode(false)
   }
 
   const exitComposeMode = () => {
-    console.log('🚪 开始退出编辑模式...')
     setIsTransitioning(true)
     setIsExiting(true)
 
     // 阶段1: 编辑面板向右收回 (立即开始)
-    console.log('📝 阶段1: 编辑面板向右收回')
     setEditingTask(null)
 
     // 阶段2: 新建面板向下掉出 (延迟到800ms，给新建面板足够的退场动画时间)
     setTimeout(() => {
-      console.log('📋 阶段2: 新建面板向下掉出 - 设置 isComposeMode = false')
       setIsComposeMode(false)
     }, 800)
 

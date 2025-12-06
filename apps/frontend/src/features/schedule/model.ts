@@ -1,17 +1,29 @@
-export type TaskStatus = 'pending' | 'completed'
-export type TaskColor = 'indigo' | 'purple' | 'teal' | 'green'
+export type TaskStatus = 'pending' | 'completed' | 'cancelled'
+export type TaskColor = 'indigo' | 'purple' | 'teal' | 'green' | 'blue' | 'orange' | 'red' | 'pink'
+export type TaskPriority = 'low' | 'normal' | 'high' | 'urgent'
+export type TaskConflictStatus = 'none' | 'conflict'
 
 export type Task = {
   id: string
+  userId: string
   title: string
-  status: TaskStatus
-  goalColor?: TaskColor
-  time?: string
   description?: string
-  isUrgent?: boolean
+  status: TaskStatus
+  priority: TaskPriority
+  isAllDay: boolean
+  startTime?: string
+  endTime?: string
+  date: string           // 开始日期 (YYYY-MM-DD)
+  endDate?: string       // 结束日期 (YYYY-MM-DD)，跨天日程使用
+  goalColor?: TaskColor
+  tags?: string[]
+  createdAt: Date
+  updatedAt: Date
+  conflictStatus?: TaskConflictStatus
+  conflictTaskIds?: string[]
 }
 
-export type DayTasks = { allDay: Task[]; timed: Task[] }
+export type DayTasks = { date: string; allDay: Task[]; timed: Task[] }
 
 function baseTasks(): DayTasks {
   return {
@@ -30,7 +42,7 @@ function baseTasks(): DayTasks {
       { id: 't3', time: '上午 11:00', title: '回复重要邮件', status: 'pending', goalColor: 'green' },
       { id: 't4', time: '中午 12:00', title: '午餐会议', status: 'completed' },
       { id: 't11', time: '下午 01:30', title: '午休', status: 'pending' },
-      { id: 't5', time: '下午 02:30', title: '与客户进行视频会议', description: '讨论第三季度合作方案。', status: 'pending', goalColor: 'purple', isUrgent: true },
+      { id: 't5', time: '下午 02:30', title: '与客户进行视频会议', description: '讨论第三季度合作方案。', status: 'pending', goalColor: 'purple' },
       { id: 't12', time: '下午 03:00', title: '代码评审', status: 'pending', goalColor: 'green' },
       { id: 't6', time: '下午 04:00', title: '团队下午茶', status: 'pending', goalColor: 'green' },
       { id: 't7', time: '下午 05:30', title: '取快递', status: 'completed' },

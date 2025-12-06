@@ -9,5 +9,12 @@ export default defineConfig({
     port: 5173, // 指定端口（可选）
     // 或者明确指定 IP
     // host: '0.0.0.0'
+    proxy: {
+      '/api': {
+        target: 'http://localhost:80',
+        changeOrigin: true,
+        rewrite: (path) => path,
+      }
+    }
   }
 })

@@ -11,7 +11,6 @@ type FormData = {
   endDate: string
   endTime: string
   goalColor: TaskColor
-  isUrgent: boolean
 }
 
 type Props = {
